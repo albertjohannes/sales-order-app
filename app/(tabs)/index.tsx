@@ -1,6 +1,7 @@
 import BalanceDetailsModal from '@/components/BalanceDetailsModal';
 import BannerCarousel from '@/components/BannerCarousel';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import PaymentMethodCard from '@/components/PaymentMethodCard';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BalanceData, Item, mockBalanceData, mockItems } from '@/data/mockData';
@@ -8,14 +9,13 @@ import { getBalanceData, saveBalanceData } from '@/services/storage';
 import { Image } from 'expo-image';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 export default function HomeScreen() {
@@ -211,43 +211,16 @@ export default function HomeScreen() {
       
       {/* Balance Section */}
       <View style={styles.balanceSection}>
-        <TouchableOpacity 
-          style={styles.balanceContainer}
+        <PaymentMethodCard
+          balanceData={balanceData}
+          isLoadingBalance={loading}
           onPress={handleBalanceTap}
-          activeOpacity={0.8}
-        >
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/warung_logo.png')}
-              style={styles.partnerLogo}
-              contentFit="contain"
-            />
-          </View>
-          <View style={styles.balanceInfo}>
-            <Text style={styles.balanceLabel}>{t('availablePlafond')}</Text>
-            {loading ? (
-              <ActivityIndicator size="small" color="white" style={styles.loadingIndicator} />
-            ) : (
-              <Text style={styles.balanceAmount}>
-                {balanceData ? formatPrice(balanceData.available_amount) : 'Rp 0'}
-              </Text>
-            )}
-            {balanceData && (
-              <Text style={styles.lastUpdated}>
-                {t('lastUpdated')}: {formatLastUpdated(balanceData.lastUpdated)}
-              </Text>
-            )}
-          </View>
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={handleRefresh}
-            disabled={refreshing}
-          >
-            <Text style={styles.refreshIcon}>
-              {refreshing ? '⏳' : '🔄'}
-            </Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          onRefresh={handleRefresh}
+          showChevron={true}
+          showRefreshButton={true}
+          isRefreshing={refreshing}
+          showLastUpdated={true}
+        />
       </View>
 
       {/* Banner Carousel */}

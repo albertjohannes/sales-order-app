@@ -1,4 +1,5 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import PaymentMethodCard from '@/components/PaymentMethodCard';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BalanceData, CartItem, Transaction, mockBalanceData } from '@/data/mockData';
@@ -7,14 +8,14 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -146,39 +147,15 @@ export default function ConfirmationScreen() {
       {/* Payment Method with Balance */}
       <View style={styles.paymentSection}>
         <Text style={styles.sectionTitle}>{t('paymentMethod')}</Text>
-        <View style={styles.balanceSection}>
-          <View style={styles.balanceHeader}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('@/assets/images/warung_logo.png')}
-                style={styles.partnerLogo}
-                contentFit="contain"
-              />
-            </View>
-            <View style={styles.balanceInfo}>
-              <Text style={styles.balanceLabel}>{t('warungBalance')}</Text>
-              <Text style={styles.balanceAmount}>
-                {balanceData ? formatPrice(balanceData.available_amount) : 'Rp 0'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.refreshButton}
-              onPress={fetchBalance}
-              disabled={refreshing}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.refreshIcon}>
-                {refreshing ? '⏳' : '🔄'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          {balanceData && (
-            <Text style={styles.lastUpdated}>
-              {t('lastUpdated')}: {new Date(balanceData.lastUpdated).toLocaleString('id-ID')}
-            </Text>
-          )}
-        </View>
+        <PaymentMethodCard
+          balanceData={balanceData}
+          isLoadingBalance={false}
+          onRefresh={fetchBalance}
+          showChevron={false}
+          showRefreshButton={true}
+          isRefreshing={refreshing}
+          showLastUpdated={true}
+        />
       </View>
 
       {/* Cart Items */}

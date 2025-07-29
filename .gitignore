@@ -112,7 +112,7 @@ metro-cache/
 # EAS BUILD
 # ========================================
 .easignore
-eas.json
+# eas.json
 
 # ========================================
 # FIREBASE (if using)

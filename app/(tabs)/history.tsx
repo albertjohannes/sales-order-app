@@ -1,43 +1,56 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Transaction } from '@/data/mockData';
-import { getTransactions, saveTransaction } from '@/services/storage';
+import { PaymentCollection, Transaction } from '@/data/mockData';
+import { getPaymentCollections, getTransactions, saveTransaction } from '@/services/storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
+
+type TabType = 'orders' | 'collections';
 
 export default function HistoryTabScreen() {
   const { t } = useLanguage();
   const router = useRouter();
+  const params = useLocalSearchParams();
+  
+  // Get initial tab from URL params or default to orders
+  const initialTab = (params.tab as TabType) || 'orders';
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [paymentCollections, setPaymentCollections] = useState<PaymentCollection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadTransactions();
+    loadData();
   }, []);
 
-  // Reload transactions when screen comes into focus (e.g., when navigating back from order detail)
+  // Reload data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadTransactions();
+      loadData();
     }, [])
   );
 
-  const loadTransactions = async () => {
+  const loadData = async () => {
     try {
-      const storedTransactions = await getTransactions();
+      setLoading(true);
+      const [storedTransactions, storedCollections] = await Promise.all([
+        getTransactions(),
+        getPaymentCollections()
+      ]);
       setTransactions(storedTransactions);
+      setPaymentCollections(storedCollections);
     } catch (error) {
-      console.error('Error loading transactions:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -60,13 +73,13 @@ export default function HistoryTabScreen() {
         { text: t('cancel'), style: 'cancel' },
         {
           text: t('confirm'),
-                      onPress: async () => {
-              try {
-                // Simulate API delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Mock receipt confirmation
-                const updatedTransaction: Transaction = {
+          onPress: async () => {
+            try {
+              // Simulate API delay
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Mock receipt confirmation
+              const updatedTransaction: Transaction = {
                 ...transaction,
                 has_good_receipt: true,
                 good_receipt_total: transaction.total,
@@ -76,7 +89,7 @@ export default function HistoryTabScreen() {
               await saveTransaction(updatedTransaction);
               
               // Reload transactions
-              await loadTransactions();
+              await loadData();
               
               Alert.alert(t('confirmReceipt'), t('receiptConfirmed'));
             } catch (error) {
@@ -91,8 +104,7 @@ export default function HistoryTabScreen() {
 
   // Group transactions by date
   const groupedTransactions = transactions.reduce((groups, transaction) => {
-    // Use local date string to avoid timezone issues
-    const date = new Date(transaction.date).toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    const date = new Date(transaction.date).toLocaleDateString('en-CA');
     if (!groups[date]) {
       groups[date] = [];
     }
@@ -100,8 +112,22 @@ export default function HistoryTabScreen() {
     return groups;
   }, {} as Record<string, Transaction[]>);
 
+  // Group payment collections by date
+  const groupedCollections = paymentCollections.reduce((groups, collection) => {
+    const date = new Date(collection.collectionDate).toLocaleDateString('en-CA');
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(collection);
+    return groups;
+  }, {} as Record<string, PaymentCollection[]>);
+
   // Sort dates in descending order
-  const sortedDates = Object.keys(groupedTransactions).sort((a, b) => 
+  const sortedTransactionDates = Object.keys(groupedTransactions).sort((a, b) => 
+    new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()
+  );
+
+  const sortedCollectionDates = Object.keys(groupedCollections).sort((a, b) => 
     new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()
   );
 
@@ -146,7 +172,6 @@ export default function HistoryTabScreen() {
         </View>
       </View>
       
-      {/* Loan ID positioned at top right */}
       {item.loan_id && (
         <View style={styles.loanIdContainer}>
           <View style={styles.loanIdBanner}>
@@ -155,7 +180,6 @@ export default function HistoryTabScreen() {
         </View>
       )}
       
-      {/* Total amount positioned below loan ID */}
       <View style={styles.transactionAmountContainer}>
         <Text style={styles.transactionTotal}>{formatPrice(item.total)}</Text>
       </View>
@@ -175,14 +199,80 @@ export default function HistoryTabScreen() {
     </TouchableOpacity>
   );
 
+  const renderCollection = ({ item }: { item: PaymentCollection }) => (
+    <TouchableOpacity 
+      style={[
+        styles.transactionCard,
+        item.status === 'completed' && styles.completedCollection,
+        item.status === 'pending' && styles.pendingCollection,
+        item.status === 'failed' && styles.failedCollection
+      ]}
+      activeOpacity={0.8}
+    >
+      <View style={styles.transactionHeader}>
+        <View style={styles.transactionInfo}>
+          <Text style={styles.transactionTime}>{formatDate(item.collectionDate)}</Text>
+          <Text style={styles.transactionId} numberOfLines={1}>
+            {item.id}
+          </Text>
+          <View style={[
+            styles.statusBadge,
+            item.status === 'completed' && styles.statusCompleted,
+            item.status === 'pending' && styles.statusPending,
+            item.status === 'failed' && styles.statusFailed
+          ]}>
+            <Text style={styles.statusText}>
+              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            </Text>
+          </View>
+        </View>
+      </View>
+      
+      <View style={styles.transactionAmountContainer}>
+        <Text style={styles.transactionTotal}>{formatPrice(item.invoiceAmount)}</Text>
+      </View>
+      
+      <View style={styles.collectionDetails}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Outlet:</Text>
+          <Text style={styles.detailValue}>{item.outletName}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Invoice:</Text>
+          <Text style={styles.detailValue}>{item.invoiceId}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Auth Code:</Text>
+          <Text style={styles.detailValue} numberOfLines={1}>{item.authorizationCode}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   const renderDateSection = ({ item }: { item: string }) => (
     <View style={styles.dateSection}>
       <Text style={styles.dateHeader}>{formatDate(item)}</Text>
-      {groupedTransactions[item].map((transaction, index) => (
-        <View key={transaction.transaction_id} style={styles.transactionWrapper}>
-          {renderTransaction({ item: transaction })}
-        </View>
-      ))}
+      {activeTab === 'orders' ? (
+        groupedTransactions[item]?.map((transaction, index) => (
+          <View key={transaction.transaction_id} style={styles.transactionWrapper}>
+            {renderTransaction({ item: transaction })}
+          </View>
+        ))
+      ) : (
+        groupedCollections[item]?.map((collection: PaymentCollection, index: number) => (
+          <View key={collection.id} style={styles.transactionWrapper}>
+            {renderCollection({ item: collection })}
+          </View>
+        ))
+      )}
+    </View>
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyHistory}>
+      <Text style={styles.emptyHistoryText}>
+        {activeTab === 'orders' ? t('noTransactions') : 'No payment collections yet'}
+      </Text>
     </View>
   );
 
@@ -190,22 +280,38 @@ export default function HistoryTabScreen() {
     <View style={styles.container}>
       <HeaderWithSettings title={t('history')} />
       
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'orders' && styles.activeTabButton]}
+          onPress={() => setActiveTab('orders')}
+        >
+          <Text style={[styles.tabText, activeTab === 'orders' && styles.activeTabText]}>
+            Orders
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'collections' && styles.activeTabButton]}
+          onPress={() => setActiveTab('collections')}
+        >
+          <Text style={[styles.tabText, activeTab === 'collections' && styles.activeTabText]}>
+            Collections
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
       ) : (
         <FlatList
-          data={sortedDates}
+          data={activeTab === 'orders' ? sortedTransactionDates : sortedCollectionDates}
           renderItem={renderDateSection}
           keyExtractor={(item) => item}
           style={styles.transactionsList}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyHistory}>
-              <Text style={styles.emptyHistoryText}>{t('noTransactions')}</Text>
-            </View>
-          }
+          ListEmptyComponent={renderEmptyState}
         />
       )}
     </View>
@@ -358,5 +464,98 @@ const styles = StyleSheet.create({
   pendingTransaction: {
     borderLeftWidth: 4,
     borderLeftColor: '#FF9800',
+  },
+  completedCollection: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  pendingCollection: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
+  },
+  failedCollection: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#F44336',
+  },
+  // New styles for collections tab
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeTabButton: {
+    backgroundColor: '#007AFF',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6c757d',
+  },
+  activeTabText: {
+    color: 'white',
+    fontWeight: '700',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+  },
+  statusCompleted: {
+    backgroundColor: '#4CAF50',
+  },
+  statusPending: {
+    backgroundColor: '#FF9800',
+  },
+  statusFailed: {
+    backgroundColor: '#F44336',
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  collectionDetails: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '600',
   },
 }); 

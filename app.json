@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "WarungOrderApp",
-    "slug": "warung-order-app",
+    "name": "SalesOrderApp",
+    "slug": "sales-order-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/warung_logo.png",
-    "scheme": "warungorderapp",
+    "icon": "./assets/images/sales_logo.png",
+    "scheme": "salesorderapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/warung_logo.png",
+        "foregroundImage": "./assets/images/sales_logo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
@@ -21,14 +21,14 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/warung_logo.png"
+      "favicon": "./assets/images/sales_logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/warung_logo.png",
+          "image": "./assets/images/sales_logo.png",
           "imageWidth": 300,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

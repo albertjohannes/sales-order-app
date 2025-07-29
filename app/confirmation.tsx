@@ -1,21 +1,21 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import PaymentMethodCard from '@/components/PaymentMethodCard';
+import ProductImage from '@/components/ProductImage';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BalanceData, CartItem, Transaction, mockBalanceData } from '@/data/mockData';
 import { getBalanceData, saveBalanceData, saveTransaction } from '@/services/storage';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -117,12 +117,9 @@ export default function ConfirmationScreen() {
 
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
-      <Image
-        source={item.imageUrl ? { uri: item.imageUrl } : undefined}
+      <ProductImage
+        imageUrl={item.imageUrl}
         style={styles.itemImage}
-        contentFit="cover"
-        placeholder={require('@/assets/images/warung_logo.png')}
-        transition={200}
       />
       <View style={styles.itemContent}>
         <View style={styles.itemHeader}>

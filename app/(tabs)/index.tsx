@@ -1,28 +1,20 @@
-import BalanceDetailsModal from '@/components/BalanceDetailsModal';
 import BannerCarousel from '@/components/BannerCarousel';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
-import PaymentMethodCard from '@/components/PaymentMethodCard';
+import ProductImage from '@/components/ProductImage';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { BalanceData, Item, mockBalanceData, mockItems } from '@/data/mockData';
-import { getBalanceData, saveBalanceData } from '@/services/storage';
-import { Image } from 'expo-image';
-import React, { useEffect, useMemo, useState } from 'react';
+import { Item, mockItems } from '@/data/mockData';
+import React, { useMemo, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function HomeScreen() {
-  const [balanceData, setBalanceData] = useState<BalanceData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showAddedNotification, setShowAddedNotification] = useState(false);
   const [addedItemName, setAddedItemName] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -48,71 +40,9 @@ export default function HomeScreen() {
     return mockItems.filter(item => item.brand === selectedBrand);
   }, [selectedBrand]);
 
-  const loadBalanceData = async () => {
-    try {
-      const savedData = await getBalanceData();
-      if (savedData) {
-        setBalanceData(savedData);
-      }
-    } catch (error) {
-      console.error('Error loading balance data:', error);
-    }
-  };
-
-  const fetchBalance = async (showLoading = true) => {
-    if (showLoading) setLoading(true);
-    setRefreshing(true);
-    
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const newBalanceData: BalanceData = {
-        ...mockBalanceData,
-        lastUpdated: new Date().toISOString()
-      };
-
-      setBalanceData(newBalanceData);
-      await saveBalanceData(newBalanceData);
-    } catch (error) {
-      console.error('Error fetching balance:', error);
-      Alert.alert(t('error'), t('connectionError'));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    fetchBalance(false);
-  };
-
-  const handleBalanceTap = () => {
-    if (balanceData) {
-      setShowBalanceModal(true);
-    }
-  };
-
   const formatPrice = (price: number) => {
     return `Rp ${price.toLocaleString('id-ID')}`;
   };
-
-  const formatLastUpdated = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('id-ID', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
-  useEffect(() => {
-    loadBalanceData();
-    fetchBalance();
-  }, []);
 
   const handleAddToCart = (item: Item) => {
     addToCart(item);
@@ -178,12 +108,9 @@ export default function HomeScreen() {
 
   const renderItem = ({ item }: { item: Item }) => (
     <View style={styles.itemCard}>
-      <Image
-        source={item.imageUrl ? { uri: item.imageUrl } : undefined}
+      <ProductImage
+        imageUrl={item.imageUrl}
         style={styles.itemImage}
-        contentFit="cover"
-        placeholder={require('@/assets/images/warung_logo.png')}
-        transition={200}
       />
       <View style={styles.itemInfo}>
         <View style={styles.itemHeader}>
@@ -207,22 +134,8 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* Header with Settings */}
-      <HeaderWithSettings title="WarungOrderApp" />
+      <HeaderWithSettings title="Sales Order App" />
       
-      {/* Balance Section */}
-      <View style={styles.balanceSection}>
-        <PaymentMethodCard
-          balanceData={balanceData}
-          isLoadingBalance={loading}
-          onPress={handleBalanceTap}
-          onRefresh={handleRefresh}
-          showChevron={true}
-          showRefreshButton={true}
-          isRefreshing={refreshing}
-          showLastUpdated={true}
-        />
-      </View>
-
       {/* Banner Carousel */}
       <BannerCarousel banners={bannerImages} />
 
@@ -257,13 +170,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Balance Details Modal */}
-      <BalanceDetailsModal
-        visible={showBalanceModal}
-        balanceData={balanceData}
-        onClose={() => setShowBalanceModal(false)}
-      />
-
     </View>
   );
 }
@@ -272,59 +178,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-  },
-  balanceSection: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  balanceContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 12,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 4,
-    marginRight: 12,
-  },
-  partnerLogo: {
-    width: 40,
-    height: 40,
-  },
-  balanceInfo: {
-    flex: 1,
-  },
-  balanceLabel: {
-    fontSize: 14,
-    color: 'white',
-    opacity: 0.8,
-  },
-  balanceAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginTop: 4,
-  },
-  loadingIndicator: {
-    marginTop: 8,
-  },
-  lastUpdated: {
-    fontSize: 10,
-    color: 'white',
-    opacity: 0.7,
-    marginTop: 4,
-  },
-  refreshButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  refreshIcon: {
-    fontSize: 20,
-    color: 'white',
   },
   filterSection: {
     backgroundColor: 'white',

@@ -28,6 +28,15 @@ export default function SuccessScreen() {
           primaryAction: () => router.push('/(tabs)/history'),
           secondaryAction: () => router.push('/(tabs)'),
         };
+      case 'payment':
+        return {
+          title: 'Payment Collection Successful',
+          message: 'Payment has been successfully collected and recorded. The transaction has been confirmed with the outlet.',
+          primaryButtonText: 'View Collections',
+          secondaryButtonText: 'Back to Home',
+          primaryAction: () => router.push('/(tabs)/history?tab=collections'),
+          secondaryAction: () => router.push('/(tabs)'),
+        };
       case 'order':
       default:
         return {

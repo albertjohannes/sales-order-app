@@ -6,11 +6,11 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Image } from 'expo-image';
 import React from 'react';
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 interface PaymentMethodCardProps {
@@ -70,7 +70,7 @@ export default function PaymentMethodCard({
         <View style={styles.paymentMethodContent}>
           <View style={styles.paymentMethodIcon}>
             <Image
-              source={require('@/assets/images/warung_logo.png')}
+              source={require('@/assets/images/sales_logo.png')}
               style={styles.warungLogo}
               contentFit="contain"
             />

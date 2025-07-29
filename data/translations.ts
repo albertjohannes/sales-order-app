@@ -71,6 +71,10 @@ export const translations = {
     id: 'Beranda',
     en: 'Home'
   },
+  payment: {
+    id: 'Pembayaran',
+    en: 'Payment'
+  },
   cart: {
     id: 'Keranjang',
     en: 'Cart'
@@ -494,6 +498,68 @@ export const translations = {
   viewHistory: {
     id: 'Lihat Riwayat',
     en: 'View History'
+  },
+
+  // Payment Screen
+  paymentCode: {
+    id: 'Kode Pembayaran',
+    en: 'Payment Code'
+  },
+  paymentCodeDesc: {
+    id: 'Silakan scan kode pembayaran dari kasir',
+    en: 'Please scan the payment code from the cashier'
+  },
+  paymentCodeExpired: {
+    id: 'Kode pembayaran sudah kadaluarsa',
+    en: 'Payment code has expired'
+  },
+  paymentCodeInvalid: {
+    id: 'Kode pembayaran tidak valid',
+    en: 'Invalid payment code'
+  },
+  expand: {
+    id: 'Perbesar',
+    en: 'Expand'
+  },
+  termsAndConditions: {
+    id: 'Syarat dan Ketentuan',
+    en: 'Terms and Conditions'
+  },
+  termsAndConditionsLink: {
+    id: 'Lihat Syarat dan Ketentuan',
+    en: 'View Terms and Conditions'
+  },
+  help: {
+    id: 'Bantuan',
+    en: 'Help'
+  },
+  helpDesc: {
+    id: 'Silakan hubungi kasir untuk bantuan',
+    en: 'Please contact the cashier for help'
+  },
+  refreshing: {
+    id: 'Memuat ulang...',
+    en: 'Refreshing...'
+  },
+  refreshFailed: {
+    id: 'Gagal memuat ulang',
+    en: 'Failed to refresh'
+  },
+  enterPinToContinue: {
+    id: 'Masukkan PIN untuk melanjutkan',
+    en: 'Enter PIN to continue'
+  },
+  enterPinDescription: {
+    id: 'Silakan masukkan PIN Anda untuk melanjutkan',
+    en: 'Please enter your PIN to continue'
+  },
+  generatePaymentCode: {
+    id: 'Generate Payment Code',
+    en: 'Generate Payment Code'
+  },
+  generatePaymentCodeDesc: {
+    id: 'Silakan klik tombol di bawah untuk menghasilkan kode pembayaran',
+    en: 'Please click the button below to generate a payment code'
   },
 } as const;
 

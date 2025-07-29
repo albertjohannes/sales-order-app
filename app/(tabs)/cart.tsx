@@ -1,8 +1,8 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import ProductImage from '@/components/ProductImage';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CartItem } from '@/data/mockData';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React from 'react';
 import {
@@ -65,12 +65,9 @@ export default function CartTabScreen() {
       rightThreshold={40}
     >
       <View style={styles.cartItem}>
-        <Image
-          source={item.imageUrl ? { uri: item.imageUrl } : undefined}
+        <ProductImage
+          imageUrl={item.imageUrl}
           style={styles.itemImage}
-          contentFit="cover"
-          placeholder={require('@/assets/images/warung_logo.png')}
-          transition={200}
         />
         <View style={styles.itemContent}>
           <View style={styles.itemHeader}>

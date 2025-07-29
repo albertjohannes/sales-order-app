@@ -1,8 +1,8 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import ProductImage from '@/components/ProductImage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Transaction } from '@/data/mockData';
 import { getTransactions, saveTransaction } from '@/services/storage';
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -189,12 +189,9 @@ export default function OrderDetailScreen() {
           <Text style={styles.sectionTitle}>{t('orderItems')}</Text>
           {transaction.items.map((item, index) => (
             <View key={index} style={styles.itemCard}>
-              <Image
-                source={item.imageUrl ? { uri: item.imageUrl } : undefined}
+              <ProductImage
+                imageUrl={item.imageUrl}
                 style={styles.itemImage}
-                contentFit="cover"
-                placeholder={require('@/assets/images/warung_logo.png')}
-                transition={200}
               />
               <View style={styles.itemContent}>
                 <View style={styles.itemHeader}>

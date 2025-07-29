@@ -399,4 +399,88 @@ export const mockTransactions: Transaction[] = [
     has_good_receipt: true,
     good_receipt_total: 43000
   }
+];
+
+// ========================================
+// OUTLET DATA - Warung Outlets for Sales
+// ========================================
+
+export interface Outlet {
+  id: string;
+  name: string;
+  address: string;
+}
+
+export interface Invoice {
+  id: string;
+  outletId: string;
+  amount: number;
+  date: string;
+  status: 'pending' | 'paid' | 'overdue';
+}
+
+export const mockOutlets: Outlet[] = [
+  { id: 'OUTLET-001', name: 'Warung Adil Jakarta', address: 'Jl. Sudirman No. 123, Jakarta' },
+  { id: 'OUTLET-002', name: 'Warung Adil Bandung', address: 'Jl. Asia Afrika No. 45, Bandung' },
+  { id: 'OUTLET-003', name: 'Warung Adil Surabaya', address: 'Jl. Tunjungan No. 67, Surabaya' },
+  { id: 'OUTLET-004', name: 'Warung Adil Medan', address: 'Jl. Merdeka No. 89, Medan' },
+];
+
+export const mockInvoices: Invoice[] = [
+  { id: 'INV-001', outletId: 'OUTLET-001', amount: 1500000, date: '2024-01-15', status: 'pending' },
+  { id: 'INV-002', outletId: 'OUTLET-001', amount: 2300000, date: '2024-01-20', status: 'pending' },
+  { id: 'INV-003', outletId: 'OUTLET-002', amount: 1800000, date: '2024-01-18', status: 'pending' },
+  { id: 'INV-004', outletId: 'OUTLET-003', amount: 2100000, date: '2024-01-22', status: 'pending' },
+];
+
+// ========================================
+// PAYMENT COLLECTION DATA - Sample Records
+// ========================================
+
+export interface PaymentCollection {
+  id: string;
+  outletId: string;
+  outletName: string;
+  invoiceId: string;
+  invoiceAmount: number;
+  authorizationCode: string;
+  collectionDate: string;
+  status: 'completed' | 'pending' | 'failed';
+  notes?: string;
+}
+
+export const mockPaymentCollections: PaymentCollection[] = [
+  {
+    id: 'PAY-2024-001',
+    outletId: 'OUTLET-001',
+    outletName: 'Warung Adil Jakarta',
+    invoiceId: 'INV-001',
+    invoiceAmount: 1500000,
+    authorizationCode: 'WA-2024-ABC123',
+    collectionDate: '2024-01-15T10:30:00Z',
+    status: 'completed',
+    notes: 'Payment collected successfully via QR scan'
+  },
+  {
+    id: 'PAY-2024-002',
+    outletId: 'OUTLET-002',
+    outletName: 'Warung Adil Bandung',
+    invoiceId: 'INV-003',
+    invoiceAmount: 1800000,
+    authorizationCode: 'WA-2024-DEF456',
+    collectionDate: '2024-01-18T14:45:00Z',
+    status: 'completed',
+    notes: 'Payment collected via manual authorization code'
+  },
+  {
+    id: 'PAY-2024-003',
+    outletId: 'OUTLET-003',
+    outletName: 'Warung Adil Surabaya',
+    invoiceId: 'INV-004',
+    invoiceAmount: 2100000,
+    authorizationCode: 'WA-2024-GHI789',
+    collectionDate: '2024-01-22T09:15:00Z',
+    status: 'pending',
+    notes: 'Payment pending confirmation'
+  }
 ]; 

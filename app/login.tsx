@@ -1,4 +1,4 @@
-import { Image } from 'expo-image';
+import ProductImage from '@/components/ProductImage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -28,9 +28,11 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Image
-          source={require('@/assets/images/warung_logo.png')}
+        <ProductImage
+          staticSource={require('@/assets/images/sales_logo.png')}
           style={styles.logo}
+          size={200}
+          borderRadius={0}
           contentFit="contain"
         />
         <Text style={styles.subtitle}>Welcome back!</Text>
@@ -68,7 +70,7 @@ export default function LoginScreen() {
       </View>
       
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Powered by PT Warung Technologies Indonesia</Text>
+        <Text style={styles.footerText}>Powered by PT Sales Technologies Indonesia</Text>
         <Text style={styles.footerYear}>2025</Text>
       </View>
     </SafeAreaView>

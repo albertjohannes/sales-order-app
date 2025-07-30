@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/sales_logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.albertandme.salesorderapp"
     },
     "web": {
       "bundler": "metro",
@@ -43,6 +44,10 @@
       "eas": {
         "projectId": "22371f46-28c5-4ff2-a918-ea1552d4ed55"
       }
+    },
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0
     }
   }
 }

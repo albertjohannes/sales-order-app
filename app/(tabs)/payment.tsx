@@ -1,10 +1,9 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import TermsModal from '@/components/TermsModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Invoice, mockInvoices, mockOutlets, Outlet, PaymentCollection } from '@/data/mockData';
-import { useColorScheme } from '@/hooks/useColorScheme';
+
 import { savePaymentCollection } from '@/services/storage';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -32,7 +31,6 @@ const QRScanner = ({ onScan }: { onScan: (data: string) => void }) => {
 };
 
 export default function PaymentScreen() {
-  const colorScheme = useColorScheme();
   const { t } = useLanguage();
   const router = useRouter();
   
@@ -130,11 +128,9 @@ export default function PaymentScreen() {
     );
   };
 
-  const colors = Colors[colorScheme ?? 'light'];
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+    <View style={styles.container}>
+      <StatusBar style="dark" />
       
       {/* Header with consistent styling */}
       <HeaderWithSettings title="Payment Collection" />
@@ -263,11 +259,11 @@ export default function PaymentScreen() {
 
         {/* Terms and Conditions */}
         <View style={styles.termsContainer}>
-          <IconSymbol name="checkmark.circle.fill" size={16} color={colors.tint} />
-          <Text style={[styles.termsText, { color: colors.text }]}>
+          <IconSymbol name="checkmark.circle.fill" size={16} color="#007AFF" />
+          <Text style={styles.termsText}>
             {t('termsAndConditions')}
             <Text 
-              style={[styles.termsLink, { color: colors.tint }]}
+              style={styles.termsLink}
               onPress={() => setShowTermsModal(true)}
             >
               {' '}{t('termsAndConditionsLink')}
@@ -491,9 +487,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     marginLeft: 8,
+    color: '#333',
   },
   termsLink: {
     textDecorationLine: 'underline',
+    color: '#007AFF',
   },
   modalContainer: {
     flex: 1,

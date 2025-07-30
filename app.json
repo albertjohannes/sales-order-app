@@ -47,7 +47,11 @@
     },
     "updates": {
       "enabled": true,
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/22371f46-28c5-4ff2-a918-ea1552d4ed55"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

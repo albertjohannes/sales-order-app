@@ -1,3 +1,4 @@
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -13,11 +14,15 @@ import {
 interface HeaderWithSettingsProps {
   title: string;
   backgroundColor?: string;
+  showCartIcon?: boolean;
+  onCartPress?: () => void;
 }
 
 export default function HeaderWithSettings({ 
   title, 
-  backgroundColor = '#007AFF' 
+  backgroundColor = '#007AFF',
+  showCartIcon = false,
+  onCartPress
 }: HeaderWithSettingsProps) {
   const [showSettings, setShowSettings] = useState(false);
   const { language, setLanguage, t } = useLanguage();
@@ -49,12 +54,22 @@ export default function HeaderWithSettings({
   return (
     <View style={[styles.header, { backgroundColor }]}>
       <Text style={styles.title}>{title}</Text>
-      <TouchableOpacity
-        style={styles.settingsButton}
-        onPress={() => setShowSettings(true)}
-      >
-        <Text style={styles.settingsIcon}>⋮</Text>
-      </TouchableOpacity>
+      <View style={styles.headerButtons}>
+        {showCartIcon && onCartPress && (
+          <TouchableOpacity
+            style={styles.cartButton}
+            onPress={onCartPress}
+          >
+            <IconSymbol name="cart" size={24} color="white" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => setShowSettings(true)}
+        >
+          <Text style={styles.settingsIcon}>⋮</Text>
+        </TouchableOpacity>
+      </View>
 
       <Modal
         visible={showSettings}
@@ -104,6 +119,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     flex: 1,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cartButton: {
+    padding: 8,
   },
   settingsButton: {
     padding: 8,

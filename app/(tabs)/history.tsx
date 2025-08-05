@@ -15,7 +15,7 @@ import {
   View
 } from 'react-native';
 
-type TabType = 'orders' | 'collections';
+type TabType = 'orders' | 'collections' | 'onboard';
 
 export default function HistoryTabScreen() {
   const { t } = useLanguage();
@@ -27,6 +27,7 @@ export default function HistoryTabScreen() {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [paymentCollections, setPaymentCollections] = useState<PaymentCollection[]>([]);
+  const [onboardingRecords, setOnboardingRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,6 +50,11 @@ export default function HistoryTabScreen() {
       ]);
       setTransactions(storedTransactions);
       setPaymentCollections(storedCollections);
+      
+      // TODO: Load onboarding records when storage is implemented
+      // const storedOnboardingRecords = await getOnboardingRecords();
+      // setOnboardingRecords(storedOnboardingRecords);
+      setOnboardingRecords([]); // Placeholder for now
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -58,7 +64,7 @@ export default function HistoryTabScreen() {
 
   const handleTransactionTap = (transaction: Transaction) => {
     // Navigate to order detail page
-    router.push(`/order-detail?transactionId=${transaction.transaction_id}`);
+    router.push(`/order/order-detail?transactionId=${transaction.transaction_id}`);
   };
 
   const handleReceiptConfirm = async (transaction: Transaction) => {
@@ -122,12 +128,26 @@ export default function HistoryTabScreen() {
     return groups;
   }, {} as Record<string, PaymentCollection[]>);
 
+  // Group onboarding records by date
+  const groupedOnboardingRecords = onboardingRecords.reduce((groups, record) => {
+    const date = new Date(record.createdAt).toLocaleDateString('en-CA');
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(record);
+    return groups;
+  }, {} as Record<string, any[]>);
+
   // Sort dates in descending order
   const sortedTransactionDates = Object.keys(groupedTransactions).sort((a, b) => 
     new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()
   );
 
   const sortedCollectionDates = Object.keys(groupedCollections).sort((a, b) => 
+    new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()
+  );
+
+  const sortedOnboardingDates = Object.keys(groupedOnboardingRecords).sort((a, b) => 
     new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()
   );
 
@@ -234,16 +254,66 @@ export default function HistoryTabScreen() {
       
       <View style={styles.collectionDetails}>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Outlet:</Text>
+          <Text style={styles.detailLabel}>{t('outlet')}:</Text>
           <Text style={styles.detailValue}>{item.outletName}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Invoice:</Text>
+          <Text style={styles.detailLabel}>{t('invoice')}:</Text>
           <Text style={styles.detailValue}>{item.invoiceId}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Auth Code:</Text>
+          <Text style={styles.detailLabel}>{t('authCode')}:</Text>
           <Text style={styles.detailValue} numberOfLines={1}>{item.authorizationCode}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderOnboardingRecord = ({ item }: { item: any }) => (
+    <TouchableOpacity 
+      style={[
+        styles.transactionCard,
+        item.status === 'approved' && styles.completedCollection,
+        item.status === 'pending' && styles.pendingCollection,
+        item.status === 'rejected' && styles.failedCollection
+      ]}
+      activeOpacity={0.8}
+    >
+      <View style={styles.transactionHeader}>
+        <View style={styles.transactionInfo}>
+          <Text style={styles.transactionTime}>{formatDate(item.createdAt)}</Text>
+          <Text style={styles.transactionId} numberOfLines={1}>
+            {item.id}
+          </Text>
+          <View style={[
+            styles.statusBadge,
+            item.status === 'approved' && styles.statusCompleted,
+            item.status === 'pending' && styles.statusPending,
+            item.status === 'rejected' && styles.statusFailed
+          ]}>
+            <Text style={styles.statusText}>
+              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            </Text>
+          </View>
+        </View>
+      </View>
+      
+      <View style={styles.collectionDetails}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>{t('outletName')}:</Text>
+          <Text style={styles.detailValue}>{item.outletName}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>{t('outletAddress')}:</Text>
+          <Text style={styles.detailValue} numberOfLines={2}>{item.address}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>{t('outletCity')}:</Text>
+          <Text style={styles.detailValue}>{item.city}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>{t('outletProvince')}:</Text>
+          <Text style={styles.detailValue}>{item.province}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -258,10 +328,16 @@ export default function HistoryTabScreen() {
             {renderTransaction({ item: transaction })}
           </View>
         ))
-      ) : (
+      ) : activeTab === 'collections' ? (
         groupedCollections[item]?.map((collection: PaymentCollection, index: number) => (
           <View key={collection.id} style={styles.transactionWrapper}>
             {renderCollection({ item: collection })}
+          </View>
+        ))
+      ) : (
+        groupedOnboardingRecords[item]?.map((record: any, index: number) => (
+          <View key={record.id} style={styles.transactionWrapper}>
+            {renderOnboardingRecord({ item: record })}
           </View>
         ))
       )}
@@ -271,7 +347,9 @@ export default function HistoryTabScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyHistory}>
       <Text style={styles.emptyHistoryText}>
-        {activeTab === 'orders' ? t('noTransactions') : 'No payment collections yet'}
+        {activeTab === 'orders' ? t('noTransactions') : 
+         activeTab === 'collections' ? t('noCollections') : 
+         t('noOnboardingRecords')}
       </Text>
     </View>
   );
@@ -287,7 +365,7 @@ export default function HistoryTabScreen() {
           onPress={() => setActiveTab('orders')}
         >
           <Text style={[styles.tabText, activeTab === 'orders' && styles.activeTabText]}>
-            Orders
+            {t('orders')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -295,7 +373,15 @@ export default function HistoryTabScreen() {
           onPress={() => setActiveTab('collections')}
         >
           <Text style={[styles.tabText, activeTab === 'collections' && styles.activeTabText]}>
-            Collections
+            {t('collections')}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'onboard' && styles.activeTabButton]}
+          onPress={() => setActiveTab('onboard')}
+        >
+          <Text style={[styles.tabText, activeTab === 'onboard' && styles.activeTabText]}>
+            {t('onboard')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -306,7 +392,11 @@ export default function HistoryTabScreen() {
         </View>
       ) : (
         <FlatList
-          data={activeTab === 'orders' ? sortedTransactionDates : sortedCollectionDates}
+          data={
+            activeTab === 'orders' ? sortedTransactionDates : 
+            activeTab === 'collections' ? sortedCollectionDates : 
+            sortedOnboardingDates
+          }
           renderItem={renderDateSection}
           keyExtractor={(item) => item}
           style={styles.transactionsList}

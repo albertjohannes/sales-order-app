@@ -28,9 +28,10 @@ export default function RootLayout() {
             <Stack initialRouteName="login">
               <Stack.Screen name="login" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="confirmation" options={{ headerShown: false }} />
-              <Stack.Screen name="order-detail" options={{ headerShown: false }} />
-              <Stack.Screen name="success" options={{ headerShown: false }} />
+              <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+              <Stack.Screen name="order" options={{ headerShown: false }} />
+              <Stack.Screen name="collection" options={{ headerShown: false }} />
+              <Stack.Screen name="shared" options={{ headerShown: false }} />
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style="auto" />

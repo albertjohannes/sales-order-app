@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('ajo@partner.app');
-  const [password, setPassword] = useState('12345678');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = () => {

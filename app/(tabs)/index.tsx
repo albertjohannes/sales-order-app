@@ -1,175 +1,95 @@
-import BannerCarousel from '@/components/BannerCarousel';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
-import ProductImage from '@/components/ProductImage';
-import { useCart } from '@/contexts/CartContext';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Item, mockItems } from '@/data/mockData';
-import React, { useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React from 'react';
 import {
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
-export default function HomeScreen() {
-  const [showAddedNotification, setShowAddedNotification] = useState(false);
-  const [addedItemName, setAddedItemName] = useState('');
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
-  const { t, tText } = useLanguage();
-  const { addToCart } = useCart();
+export default function Index() {
+  const { t } = useLanguage();
+  const router = useRouter();
 
-  // Banner images
-  const bannerImages = [
-    require('@/assets/images/banners/banner_1.png'),
-    require('@/assets/images/banners/banner_2.png'),
-    require('@/assets/images/banners/banner_3.png'),
-  ];
-
-  // Get unique brands from items
-  const brands = useMemo(() => {
-    const uniqueBrands = [...new Set(mockItems.map(item => item.brand))];
-    return uniqueBrands.sort();
-  }, []);
-
-  // Filter items based on selected brand
-  const filteredItems = useMemo(() => {
-    if (!selectedBrand) return mockItems;
-    return mockItems.filter(item => item.brand === selectedBrand);
-  }, [selectedBrand]);
-
-  const formatPrice = (price: number) => {
-    return `Rp ${price.toLocaleString('id-ID')}`;
+  const handleOnboard = () => {
+    router.push('/onboarding');
   };
 
-  const handleAddToCart = (item: Item) => {
-    addToCart(item);
-    
-    // Show notification
-    setAddedItemName(item.name);
-    setShowAddedNotification(true);
-    
-    // Hide notification after 2 seconds
-    setTimeout(() => {
-      setShowAddedNotification(false);
-    }, 2000);
+  const handleOrder = () => {
+    router.push('/order');
   };
 
-  const handleBrandFilter = (brand: string | null) => {
-    setSelectedBrand(brand);
+  const handleCollection = () => {
+    router.push('/collection');
   };
 
-  const renderBrandFilter = () => (
-    <View style={styles.filterSection}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterContainer}
-      >
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            !selectedBrand && styles.filterChipActive
-          ]}
-          onPress={() => handleBrandFilter(null)}
-          activeOpacity={0.7}
-        >
-          <Text style={[
-            styles.filterChipText,
-            !selectedBrand && styles.filterChipTextActive
-          ]}>
-            {t('allBrands')}
-          </Text>
-        </TouchableOpacity>
-        
-        {brands.map((brand) => (
-          <TouchableOpacity
-            key={brand}
-            style={[
-              styles.filterChip,
-              selectedBrand === brand && styles.filterChipActive
-            ]}
-            onPress={() => handleBrandFilter(brand)}
-            activeOpacity={0.7}
-          >
-            <Text style={[
-              styles.filterChipText,
-              selectedBrand === brand && styles.filterChipTextActive
-            ]}>
-              {brand}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
-
-  const renderItem = ({ item }: { item: Item }) => (
-    <View style={styles.itemCard}>
-      <ProductImage
-        imageUrl={item.imageUrl}
-        style={styles.itemImage}
-      />
-      <View style={styles.itemInfo}>
-        <View style={styles.itemHeader}>
-          <Text style={styles.itemName}>{item.name}</Text>
-          <Text style={styles.itemSku}>{item.sku}</Text>
+  const ActionCard = ({ 
+    title, 
+    description, 
+    icon, 
+    onPress, 
+    color 
+  }: { 
+    title: string; 
+    description: string; 
+    icon: string; 
+    onPress: () => void; 
+    color: string; 
+  }) => (
+    <TouchableOpacity 
+      style={[styles.actionCard, { borderLeftColor: color }]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.actionContent}>
+        <View style={[styles.iconContainer, { backgroundColor: color }]}>
+          <IconSymbol name={icon} size={32} color="white" />
         </View>
-        <Text style={styles.itemBrand}>{item.brand}</Text>
-        <Text style={styles.itemDescription}>{tText(item.description)}</Text>
-        <Text style={styles.itemPrice}>{formatPrice(item.price)} / {t('unit')}</Text>
+        <View style={styles.actionText}>
+          <Text style={styles.actionTitle}>{title}</Text>
+          <Text style={styles.actionDescription}>{description}</Text>
+        </View>
+        <IconSymbol name="chevron.right" size={20} color="#999" />
       </View>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => handleAddToCart(item)}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.addButtonIcon}>+</Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      {/* Header with Settings */}
-      <HeaderWithSettings title="Sales Order App" />
+      <HeaderWithSettings title={t('welcome')} />
       
-      {/* Banner Carousel */}
-      <BannerCarousel banners={bannerImages} />
-
-      {/* Brand Filter */}
-      {renderBrandFilter()}
-
-      {/* Items List */}
-      <FlatList
-        data={filteredItems}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        style={styles.itemsList}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyList}>
-            <Text style={styles.emptyListText}>
-              {selectedBrand 
-                ? `${t('noItemsForBrand')} "${selectedBrand}"`
-                : t('noItems')
-              }
-            </Text>
-          </View>
-        }
-      />
-
-      {/* Added to Cart Notification */}
-      {showAddedNotification && (
-        <View style={styles.notification}>
-          <Text style={styles.notificationText}>
-            ✅ {addedItemName} {t('addedToCart')}
-          </Text>
+      <View style={styles.content}>
+        <Text style={styles.subtitle}>{t('chooseAction')}</Text>
+        
+        <View style={styles.actionsContainer}>
+          <ActionCard
+            title={t('onboard')}
+            description={t('onboardDesc')}
+            icon="person.badge.plus"
+            onPress={handleOnboard}
+            color="#28a745"
+          />
+          
+          <ActionCard
+            title={t('order')}
+            description={t('orderDesc')}
+            icon="cart"
+            onPress={handleOrder}
+            color="#007AFF"
+          />
+          
+          <ActionCard
+            title={t('collection')}
+            description={t('collectionDesc')}
+            icon="creditcard"
+            onPress={handleCollection}
+            color="#FF6B35"
+          />
         </View>
-      )}
-
+      </View>
     </View>
   );
 }
@@ -179,47 +99,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  filterSection: {
-    backgroundColor: 'white',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  filterContainer: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  filterChipActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  filterChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-  },
-  filterChipTextActive: {
-    color: 'white',
-  },
-  itemsList: {
+  content: {
     flex: 1,
-    paddingHorizontal: 12,
+    padding: 16,
   },
-  itemCard: {
+  subtitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  actionsContainer: {
+    gap: 16,
+  },
+  actionCard: {
     backgroundColor: 'white',
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -229,104 +127,30 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  itemImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
+  actionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  itemInfo: {
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  actionText: {
     flex: 1,
   },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 2,
-  },
-  itemName: {
-    fontSize: 16,
+  actionTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    flex: 1,
-    marginRight: 8,
-  },
-  itemSku: {
-    fontSize: 11,
-    color: '#999',
-    fontFamily: 'monospace',
-  },
-  itemBrand: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#007AFF',
     marginBottom: 4,
   },
-  itemDescription: {
-    fontSize: 13,
+  actionDescription: {
+    fontSize: 14,
     color: '#666',
-    marginBottom: 6,
-  },
-  itemPrice: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  addButton: {
-    backgroundColor: '#007AFF',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  addButtonIcon: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
     lineHeight: 20,
   },
-  emptyList: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyListText: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-  },
-  notification: {
-    position: 'absolute',
-    bottom: 100,
-    left: 16,
-    right: 16,
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 8,
-    zIndex: 1000,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  notificationText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
-    textAlign: 'center',
-  },
-});
+}); 

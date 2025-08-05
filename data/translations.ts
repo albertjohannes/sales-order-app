@@ -219,6 +219,10 @@ export const translations = {
     id: 'Belum ada transaksi',
     en: 'No transactions yet'
   },
+  noCollections: {
+    id: 'Belum ada koleksi pembayaran',
+    en: 'No payment collections yet'
+  },
   transactionHistory: {
     id: 'Riwayat Transaksi',
     en: 'Transaction History'
@@ -238,6 +242,150 @@ export const translations = {
   amount: {
     id: 'Jumlah',
     en: 'Amount'
+  },
+  orders: {
+    id: 'Pesanan',
+    en: 'Orders'
+  },
+  collections: {
+    id: 'Koleksi',
+    en: 'Collections'
+  },
+  outlet: {
+    id: 'Outlet',
+    en: 'Outlet'
+  },
+  invoice: {
+    id: 'Invoice',
+    en: 'Invoice'
+  },
+  authCode: {
+    id: 'Kode Otorisasi',
+    en: 'Auth Code'
+  },
+  paymentCollection: {
+    id: 'Koleksi Pembayaran',
+    en: 'Payment Collection'
+  },
+  salesOrderApp: {
+    id: 'Aplikasi Sales Order',
+    en: 'Sales Order App'
+  },
+  selectOutlet: {
+    id: 'Pilih Outlet',
+    en: 'Select Outlet'
+  },
+  selectInvoice: {
+    id: 'Pilih Invoice',
+    en: 'Select Invoice'
+  },
+  authorization: {
+    id: 'Otorisasi',
+    en: 'Authorization'
+  },
+  chooseOutlet: {
+    id: 'Pilih outlet',
+    en: 'Choose outlet'
+  },
+  chooseInvoice: {
+    id: 'Pilih invoice',
+    en: 'Choose invoice'
+  },
+  authorizationCode: {
+    id: 'Kode Otorisasi:',
+    en: 'Authorization Code:'
+  },
+  enterAuthCodePlaceholder: {
+    id: 'Masukkan kode otorisasi secara manual atau scan QR',
+    en: 'Enter authorization code manually or scan QR'
+  },
+  validAuthCode: {
+    id: 'Kode otorisasi valid',
+    en: 'Valid authorization code'
+  },
+  invalidAuthCode: {
+    id: 'Kode otorisasi tidak valid',
+    en: 'Invalid authorization code'
+  },
+  submitPaymentCollection: {
+    id: 'Kirim Koleksi Pembayaran',
+    en: 'Submit Payment Collection'
+  },
+  scanQRPromo: {
+    id: 'Scan kode QR dari aplikasi Warung Adil untuk otorisasi cepat. Input manual juga tersedia.',
+    en: 'Scan QR codes from Warung Adil app for quick authorization. Manual entry also available.'
+  },
+  tapToScanQR: {
+    id: 'Tap untuk scan QR otorisasi',
+    en: 'Tap to scan authorization QR'
+  },
+  confirmTransaction: {
+    id: 'Konfirmasi Transaksi',
+    en: 'Confirm Transaction'
+  },
+  confirmPaymentMessage: {
+    id: 'Konfirmasi pembayaran {amount} untuk {outlet}?',
+    en: 'Confirm payment of {amount} for {outlet}?'
+  },
+  selectOutletFirst: {
+    id: 'Silakan pilih outlet terlebih dahulu',
+    en: 'Please select an outlet first'
+  },
+  selectInvoiceError: {
+    id: 'Silakan pilih invoice',
+    en: 'Please select an invoice'
+  },
+  scanValidAuthCode: {
+    id: 'Silakan scan atau masukkan kode otorisasi yang valid',
+    en: 'Please scan or enter a valid authorization code'
+  },
+  failedSavePayment: {
+    id: 'Gagal menyimpan koleksi pembayaran',
+    en: 'Failed to save payment collection'
+  },
+  welcome: {
+    id: 'Selamat Datang',
+    en: 'Welcome'
+  },
+  chooseAction: {
+    id: 'Pilih Aksi',
+    en: 'Choose Action'
+  },
+  onboard: {
+    id: 'Onboard',
+    en: 'Onboard'
+  },
+  onboardDesc: {
+    id: 'Daftar outlet baru ke dalam sistem',
+    en: 'Register new outlets to the system'
+  },
+  order: {
+    id: 'Pesanan',
+    en: 'Order'
+  },
+  orderDesc: {
+    id: 'Buat pesanan dan kelola keranjang',
+    en: 'Create orders and manage cart'
+  },
+  collection: {
+    id: 'Koleksi',
+    en: 'Collection'
+  },
+  collectionDesc: {
+    id: 'Kelola pembayaran dan koleksi',
+    en: 'Manage payments and collections'
+  },
+  paymentCollectionSuccess: {
+    id: 'Koleksi Pembayaran Berhasil',
+    en: 'Payment Collection Successful'
+  },
+  paymentCollectionSuccessMessage: {
+    id: 'Pembayaran telah berhasil dikumpulkan dan dicatat. Transaksi telah dikonfirmasi dengan outlet.',
+    en: 'Payment has been successfully collected and recorded. The transaction has been confirmed with the outlet.'
+  },
+  viewCollections: {
+    id: 'Lihat Koleksi',
+    en: 'View Collections'
   },
 
   // Success Screen
@@ -560,6 +708,271 @@ export const translations = {
   generatePaymentCodeDesc: {
     id: 'Silakan klik tombol di bawah untuk menghasilkan kode pembayaran',
     en: 'Please click the button below to generate a payment code'
+  },
+
+  // Onboarding Screen
+  outletBasicInfo: {
+    id: 'Informasi Dasar Outlet',
+    en: 'Outlet Basic Information'
+  },
+  outletBasicInfoDesc: {
+    id: 'Silakan isi informasi dasar outlet Anda',
+    en: 'Please fill in your outlet basic information'
+  },
+  outletName: {
+    id: 'Nama Outlet',
+    en: 'Outlet Name'
+  },
+  enterOutletName: {
+    id: 'Masukkan nama outlet',
+    en: 'Enter outlet name'
+  },
+  outletAddress: {
+    id: 'Alamat Outlet',
+    en: 'Outlet Address'
+  },
+  enterOutletAddress: {
+    id: 'Masukkan alamat outlet',
+    en: 'Enter outlet address'
+  },
+  outletCity: {
+    id: 'Kota Outlet',
+    en: 'Outlet City'
+  },
+  enterOutletCity: {
+    id: 'Masukkan kota outlet',
+    en: 'Enter outlet city'
+  },
+  outletProvince: {
+    id: 'Provinsi Outlet',
+    en: 'Outlet Province'
+  },
+  enterOutletProvince: {
+    id: 'Masukkan provinsi outlet',
+    en: 'Enter outlet province'
+  },
+  outletPostalCode: {
+    id: 'Kode Pos Outlet',
+    en: 'Outlet Postal Code'
+  },
+  enterOutletPostalCode: {
+    id: 'Masukkan kode pos outlet',
+    en: 'Enter outlet postal code'
+  },
+  outletLocation: {
+    id: 'Lokasi Outlet',
+    en: 'Outlet Location'
+  },
+  outletLocationDesc: {
+    id: 'Silakan tentukan lokasi outlet Anda',
+    en: 'Please determine your outlet location'
+  },
+  captureGPSLocation: {
+    id: 'Ambil Lokasi GPS',
+    en: 'Capture GPS Location'
+  },
+  tapToCaptureLocation: {
+    id: 'Tap untuk mengambil lokasi',
+    en: 'Tap to capture location'
+  },
+  latitude: {
+    id: 'Latitude',
+    en: 'Latitude'
+  },
+  longitude: {
+    id: 'Longitude',
+    en: 'Longitude'
+  },
+  outletPhotos: {
+    id: 'Foto Outlet',
+    en: 'Outlet Photos'
+  },
+  outletPhotosDesc: {
+    id: 'Silakan upload foto-foto outlet yang diperlukan',
+    en: 'Please upload the required outlet photos'
+  },
+  ktpPhoto: {
+    id: 'Foto KTP',
+    en: 'KTP Photo'
+  },
+  uploadKTPPhoto: {
+    id: 'Upload Foto KTP',
+    en: 'Upload KTP Photo'
+  },
+  outletOutsidePhotos: {
+    id: 'Foto Luar Outlet',
+    en: 'Outlet Outside Photos'
+  },
+  outletInsidePhotos: {
+    id: 'Foto Dalam Outlet',
+    en: 'Outlet Inside Photos'
+  },
+  outletInventoryPhotos: {
+    id: 'Foto Inventaris Outlet',
+    en: 'Outlet Inventory Photos'
+  },
+  photoUpload: {
+    id: 'Upload Foto',
+    en: 'Photo Upload'
+  },
+  photoUploadMessage: {
+    id: 'Silakan pilih cara untuk mengambil foto',
+    en: 'Please choose how to take the photo'
+  },
+  takePhoto: {
+    id: 'Ambil Foto',
+    en: 'Take Photo'
+  },
+  photoUploaded: {
+    id: 'Foto Terupload',
+    en: 'Photo Uploaded'
+  },
+  uploaded: {
+    id: 'Terupload',
+    en: 'Uploaded'
+  },
+  photo: {
+    id: 'Foto',
+    en: 'Photo'
+  },
+  locationCapture: {
+    id: 'Ambil Lokasi GPS',
+    en: 'Capture GPS Location'
+  },
+  locationCaptureMessage: {
+    id: 'Silakan pilih cara untuk mengambil lokasi GPS',
+    en: 'Please choose how to capture GPS location'
+  },
+  captureLocation: {
+    id: 'Ambil Lokasi',
+    en: 'Capture Location'
+  },
+  reviewOutletInfo: {
+    id: 'Review Informasi Outlet',
+    en: 'Review Outlet Information'
+  },
+  reviewOutletInfoDesc: {
+    id: 'Silakan review informasi outlet yang telah diisi',
+    en: 'Please review the filled outlet information'
+  },
+  basicInfo: {
+    id: 'Informasi Dasar',
+    en: 'Basic Information'
+  },
+  location: {
+    id: 'Lokasi',
+    en: 'Location'
+  },
+  photos: {
+    id: 'Foto',
+    en: 'Photos'
+  },
+  coordinates: {
+    id: 'Koordinat',
+    en: 'Coordinates'
+  },
+  notProvided: {
+    id: 'Belum Diisi',
+    en: 'Not Provided'
+  },
+
+  next: {
+    id: 'Selanjutnya',
+    en: 'Next'
+  },
+  submitOutlet: {
+    id: 'Submit Outlet',
+    en: 'Submit Outlet'
+  },
+  onboardingComplete: {
+    id: 'Onboarding Selesai',
+    en: 'Onboarding Complete'
+  },
+  onboardingCompleteMessage: {
+    id: 'Outlet telah berhasil didaftarkan. Tim kami akan menghubungi Anda segera.',
+    en: 'Outlet has been successfully registered. Our team will contact you soon.'
+  },
+
+  // Address Hierarchy
+  selectProvince: {
+    id: 'Pilih Provinsi',
+    en: 'Select Province'
+  },
+  selectRegency: {
+    id: 'Pilih Kabupaten/Kota',
+    en: 'Select Regency/City'
+  },
+  selectDistrict: {
+    id: 'Pilih Kecamatan',
+    en: 'Select District'
+  },
+  selectVillage: {
+    id: 'Pilih Desa/Kelurahan',
+    en: 'Select Village/Sub-district'
+  },
+  province: {
+    id: 'Provinsi',
+    en: 'Province'
+  },
+  regency: {
+    id: 'Kabupaten/Kota',
+    en: 'Regency/City'
+  },
+  district: {
+    id: 'Kecamatan',
+    en: 'District'
+  },
+  village: {
+    id: 'Desa/Kelurahan',
+    en: 'Village/Sub-district'
+  },
+  streetAddress: {
+    id: 'Alamat Jalan',
+    en: 'Street Address'
+  },
+  enterStreetAddress: {
+    id: 'Masukkan alamat jalan lengkap',
+    en: 'Enter complete street address'
+  },
+  postalCode: {
+    id: 'Kode Pos',
+    en: 'Postal Code'
+  },
+  enterPostalCode: {
+    id: 'Masukkan kode pos',
+    en: 'Enter postal code'
+  },
+  addressDetails: {
+    id: 'Detail Alamat',
+    en: 'Address Details'
+  },
+  addressDetailsDesc: {
+    id: 'Silakan pilih lokasi administratif outlet Anda',
+    en: 'Please select your outlet administrative location'
+  },
+
+  // Search translations
+  searchProvince: {
+    id: 'Cari provinsi...',
+    en: 'Search province...'
+  },
+  searchRegency: {
+    id: 'Cari kabupaten/kota...',
+    en: 'Search regency/city...'
+  },
+  searchDistrict: {
+    id: 'Cari kecamatan...',
+    en: 'Search district...'
+  },
+  searchVillage: {
+    id: 'Cari desa/kelurahan...',
+    en: 'Search village/sub-district...'
+  },
+
+  // Onboarding History
+  noOnboardingRecords: {
+    id: 'Belum ada riwayat onboarding',
+    en: 'No onboarding records yet'
   },
 } as const;
 

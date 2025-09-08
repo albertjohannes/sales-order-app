@@ -39,7 +39,7 @@ export interface BalanceData {
   distributor_id: string;
   distributor_name: string;
   outlet_id: string;
-  outlet_Name: string | null;
+  outlet_name: string | null;
   limit_type: string;
   plafond_amount: number;
   available_amount: number;
@@ -56,7 +56,7 @@ export const mockBalanceData: BalanceData = {
   distributor_id: 'DIST-001',
   distributor_name: 'Main Distributor',
   outlet_id: 'OUT-001',
-  outlet_Name: 'Sample Outlet',
+  outlet_name: 'Warung Tuman',
   limit_type: 'Credit Limit',
   plafond_amount: 5000000,
   available_amount: 3250000,
@@ -408,7 +408,32 @@ export const mockTransactions: Transaction[] = [
 export interface Outlet {
   id: string;
   name: string;
-  address: string;
+  streetAddress: string;
+  province: {
+    code: string;
+    name: string;
+  };
+  regency: {
+    code: string;
+    name: string;
+  };
+  district: {
+    code: string;
+    name: string;
+  };
+  village: {
+    code: string;
+    name: string;
+  };
+  postalCode: string;
+  latitude: string;
+  longitude: string;
+  ktpPhoto: string;
+  outsidePhotos: string[];
+  insidePhotos: string[];
+  inventoryPhotos: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Invoice {
@@ -420,17 +445,105 @@ export interface Invoice {
 }
 
 export const mockOutlets: Outlet[] = [
-  { id: 'OUTLET-001', name: 'Warung Adil Jakarta', address: 'Jl. Sudirman No. 123, Jakarta' },
-  { id: 'OUTLET-002', name: 'Warung Adil Bandung', address: 'Jl. Asia Afrika No. 45, Bandung' },
-  { id: 'OUTLET-003', name: 'Warung Adil Surabaya', address: 'Jl. Tunjungan No. 67, Surabaya' },
-  { id: 'OUTLET-004', name: 'Warung Adil Medan', address: 'Jl. Merdeka No. 89, Medan' },
+  { 
+    id: 'OUTLET-001', 
+    name: 'Warung Adil Jakarta', 
+    streetAddress: 'Jl. Sudirman No. 123, Jakarta',
+    province: { code: '31', name: 'DKI Jakarta' },
+    regency: { code: '3171', name: 'Jakarta Selatan' },
+    district: { code: '317104', name: 'Kebayoran Baru' },
+    village: { code: '31710401', name: 'Senayan' },
+    postalCode: '12190',
+    latitude: '-6.2088',
+    longitude: '106.8456',
+    ktpPhoto: 'ktp_001.jpg',
+    outsidePhotos: ['outside_001_1.jpg', 'outside_001_2.jpg', 'outside_001_3.jpg'],
+    insidePhotos: ['inside_001_1.jpg', 'inside_001_2.jpg', 'inside_001_3.jpg'],
+    inventoryPhotos: ['inventory_001_1.jpg', 'inventory_001_2.jpg', 'inventory_001_3.jpg'],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
+  },
+  { 
+    id: 'OUTLET-002', 
+    name: 'Warung Adil Bandung', 
+    streetAddress: 'Jl. Asia Afrika No. 45, Bandung',
+    province: { code: '32', name: 'Jawa Barat' },
+    regency: { code: '3273', name: 'Kota Bandung' },
+    district: { code: '327301', name: 'Bandung Wetan' },
+    village: { code: '32730101', name: 'Citarum' },
+    postalCode: '40115',
+    latitude: '-6.9175',
+    longitude: '107.6191',
+    ktpPhoto: 'ktp_002.jpg',
+    outsidePhotos: ['outside_002_1.jpg', 'outside_002_2.jpg', 'outside_002_3.jpg'],
+    insidePhotos: ['inside_002_1.jpg', 'inside_002_2.jpg', 'inside_002_3.jpg'],
+    inventoryPhotos: ['inventory_002_1.jpg', 'inventory_002_2.jpg', 'inventory_002_3.jpg'],
+    createdAt: '2024-01-18T14:00:00Z',
+    updatedAt: '2024-01-18T14:00:00Z'
+  },
+  { 
+    id: 'OUTLET-003', 
+    name: 'Warung Adil Surabaya', 
+    streetAddress: 'Jl. Tunjungan No. 67, Surabaya',
+    province: { code: '35', name: 'Jawa Timur' },
+    regency: { code: '3578', name: 'Kota Surabaya' },
+    district: { code: '357801', name: 'Genteng' },
+    village: { code: '35780101', name: 'Genteng' },
+    postalCode: '60275',
+    latitude: '-7.2575',
+    longitude: '112.7501',
+    ktpPhoto: 'ktp_003.jpg',
+    outsidePhotos: ['outside_003_1.jpg', 'outside_003_2.jpg', 'outside_003_3.jpg'],
+    insidePhotos: ['inside_003_1.jpg', 'inside_003_2.jpg', 'inside_003_3.jpg'],
+    inventoryPhotos: ['inventory_003_1.jpg', 'inventory_003_2.jpg', 'inventory_003_3.jpg'],
+    createdAt: '2024-01-22T09:00:00Z',
+    updatedAt: '2024-01-22T09:00:00Z'
+  },
+  { 
+    id: 'OUTLET-004', 
+    name: 'Warung Adil Medan', 
+    streetAddress: 'Jl. Merdeka No. 89, Medan',
+    province: { code: '12', name: 'Sumatera Utara' },
+    regency: { code: '1275', name: 'Kota Medan' },
+    district: { code: '127501', name: 'Medan Tuntungan' },
+    village: { code: '12750101', name: 'Tuntungan I' },
+    postalCode: '20135',
+    latitude: '3.5952',
+    longitude: '98.6722',
+    ktpPhoto: 'ktp_004.jpg',
+    outsidePhotos: ['outside_004_1.jpg', 'outside_004_2.jpg', 'outside_004_3.jpg'],
+    insidePhotos: ['inside_004_1.jpg', 'inside_004_2.jpg', 'inside_004_3.jpg'],
+    inventoryPhotos: ['inventory_004_1.jpg', 'inventory_004_2.jpg', 'inventory_004_3.jpg'],
+    createdAt: '2024-01-25T11:00:00Z',
+    updatedAt: '2024-01-25T11:00:00Z'
+  },
 ];
 
 export const mockInvoices: Invoice[] = [
+  // Outlet 001 - Warung Adil Jakarta
   { id: 'INV-001', outletId: 'OUTLET-001', amount: 1500000, date: '2024-01-15', status: 'pending' },
   { id: 'INV-002', outletId: 'OUTLET-001', amount: 2300000, date: '2024-01-20', status: 'pending' },
-  { id: 'INV-003', outletId: 'OUTLET-002', amount: 1800000, date: '2024-01-18', status: 'pending' },
-  { id: 'INV-004', outletId: 'OUTLET-003', amount: 2100000, date: '2024-01-22', status: 'pending' },
+  { id: 'INV-003', outletId: 'OUTLET-001', amount: 1850000, date: '2024-01-25', status: 'pending' },
+  { id: 'INV-013', outletId: 'OUTLET-001', amount: 1200000, date: '2024-01-10', status: 'paid' },
+  { id: 'INV-014', outletId: 'OUTLET-001', amount: 2100000, date: '2024-01-05', status: 'paid' },
+  
+  // Outlet 002 - Warung Adil Bandung
+  { id: 'INV-004', outletId: 'OUTLET-002', amount: 1800000, date: '2024-01-18', status: 'pending' },
+  { id: 'INV-005', outletId: 'OUTLET-002', amount: 2200000, date: '2024-01-22', status: 'pending' },
+  { id: 'INV-006', outletId: 'OUTLET-002', amount: 1950000, date: '2024-01-28', status: 'pending' },
+  { id: 'INV-015', outletId: 'OUTLET-002', amount: 1650000, date: '2024-01-12', status: 'paid' },
+  
+  // Outlet 003 - Warung Adil Surabaya
+  { id: 'INV-007', outletId: 'OUTLET-003', amount: 2100000, date: '2024-01-22', status: 'pending' },
+  { id: 'INV-008', outletId: 'OUTLET-003', amount: 1750000, date: '2024-01-26', status: 'pending' },
+  { id: 'INV-009', outletId: 'OUTLET-003', amount: 2400000, date: '2024-01-30', status: 'pending' },
+  { id: 'INV-016', outletId: 'OUTLET-003', amount: 1950000, date: '2024-01-08', status: 'paid' },
+  
+  // Outlet 004 - Warung Adil Medan
+  { id: 'INV-010', outletId: 'OUTLET-004', amount: 1650000, date: '2024-01-24', status: 'pending' },
+  { id: 'INV-011', outletId: 'OUTLET-004', amount: 2250000, date: '2024-01-27', status: 'pending' },
+  { id: 'INV-012', outletId: 'OUTLET-004', amount: 1900000, date: '2024-01-31', status: 'pending' },
+  { id: 'INV-017', outletId: 'OUTLET-004', amount: 1800000, date: '2024-01-14', status: 'paid' },
 ];
 
 // ========================================

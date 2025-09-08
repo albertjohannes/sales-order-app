@@ -16,13 +16,15 @@ interface HeaderWithSettingsProps {
   backgroundColor?: string;
   showCartIcon?: boolean;
   onCartPress?: () => void;
+  cartItemCount?: number;
 }
 
 export default function HeaderWithSettings({ 
   title, 
   backgroundColor = '#007AFF',
   showCartIcon = false,
-  onCartPress
+  onCartPress,
+  cartItemCount = 0
 }: HeaderWithSettingsProps) {
   const [showSettings, setShowSettings] = useState(false);
   const { language, setLanguage, t } = useLanguage();
@@ -61,6 +63,11 @@ export default function HeaderWithSettings({
             onPress={onCartPress}
           >
             <IconSymbol name="cart" size={24} color="white" />
+            {cartItemCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -127,6 +134,26 @@ const styles = StyleSheet.create({
   },
   cartButton: {
     padding: 8,
+    position: 'relative',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  cartBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   settingsButton: {
     padding: 8,

@@ -271,6 +271,10 @@ export const translations = {
     id: 'Aplikasi Sales Order',
     en: 'Sales Order App'
   },
+  salesApp: {
+    id: 'Aplikasi Sales',
+    en: 'Sales App'
+  },
   selectOutlet: {
     id: 'Pilih Outlet',
     en: 'Select Outlet'
@@ -382,6 +386,159 @@ export const translations = {
   paymentCollectionSuccessMessage: {
     id: 'Pembayaran telah berhasil dikumpulkan dan dicatat. Transaksi telah dikonfirmasi dengan outlet.',
     en: 'Payment has been successfully collected and recorded. The transaction has been confirmed with the outlet.'
+  },
+  cashAmount: {
+    id: 'Jumlah Uang Tunai',
+    en: 'Cash Amount'
+  },
+  enterCashAmount: {
+    id: 'Masukkan Jumlah Uang Tunai:',
+    en: 'Enter Cash Amount:'
+  },
+  validAmount: {
+    id: 'Jumlah valid',
+    en: 'Valid amount'
+  },
+  invalidAmount: {
+    id: 'Jumlah tidak valid',
+    en: 'Invalid amount'
+  },
+  requestApproval: {
+    id: 'Minta Persetujuan',
+    en: 'Request Approval'
+  },
+  requestOutletApproval: {
+    id: 'Minta Persetujuan dari Outlet',
+    en: 'Request Outlet Approval'
+  },
+  approvalRequestDescription: {
+    id: 'Kirim permintaan persetujuan ke {outlet} untuk mengumpulkan {amount}. Mereka akan menerima SMS dengan kode otorisasi.',
+    en: 'Send approval request to {outlet} to collect {amount}. They will receive an SMS with the authorization code.'
+  },
+  requestingApproval: {
+    id: 'Meminta Persetujuan...',
+    en: 'Requesting Approval...'
+  },
+  approvalRequested: {
+    id: 'Permintaan Persetujuan Terkirim',
+    en: 'Approval Request Sent'
+  },
+  waitingForAuthorizationCode: {
+    id: 'Menunggu kode otorisasi dari {outlet}',
+    en: 'Waiting for authorization code from {outlet}'
+  },
+  address: {
+    id: 'Alamat',
+    en: 'Address'
+  },
+  loadingAddress: {
+    id: 'Memuat alamat...',
+    en: 'Loading address...'
+  },
+  noAddressFound: {
+    id: 'Alamat tidak ditemukan',
+    en: 'No address found'
+  },
+  locationMap: {
+    id: 'Peta Lokasi',
+    en: 'Location Map'
+  },
+
+  tapToView: {
+    id: 'Ketuk untuk melihat',
+    en: 'Tap to view'
+  },
+  photoPreview: {
+    id: 'Pratinjau Foto',
+    en: 'Photo Preview'
+  },
+  retakePhoto: {
+    id: 'Ambil Ulang',
+    en: 'Retake Photo'
+  },
+  done: {
+    id: 'Selesai',
+    en: 'Done'
+  },
+  takeAnotherPhoto: {
+    id: 'Ambil Foto Lain',
+    en: 'Take Another Photo'
+  },
+  capturingLocation: {
+    id: 'Mengambil Lokasi...',
+    en: 'Capturing Location...'
+  },
+  permissionDenied: {
+    id: 'Izin Ditolak',
+    en: 'Permission Denied'
+  },
+  locationPermissionMessage: {
+    id: 'Aplikasi memerlukan izin lokasi untuk mengambil koordinat GPS. Silakan aktifkan izin lokasi di pengaturan.',
+    en: 'This app needs location permission to capture GPS coordinates. Please enable location permission in settings.'
+  },
+  locationError: {
+    id: 'Gagal mengambil lokasi. Pastikan GPS aktif dan coba lagi.',
+    en: 'Failed to get location. Make sure GPS is enabled and try again.'
+  },
+  locationServicesDisabled: {
+    id: 'Layanan Lokasi Dinonaktifkan',
+    en: 'Location Services Disabled'
+  },
+  locationServicesMessage: {
+    id: 'Layanan lokasi dinonaktifkan di perangkat. Silakan aktifkan di pengaturan.',
+    en: 'Location services are disabled on your device. Please enable them in settings.'
+  },
+  openSettings: {
+    id: 'Buka Pengaturan',
+    en: 'Open Settings'
+  },
+  locationCaptured: {
+    id: 'Lokasi Berhasil Diambil',
+    en: 'Location Captured'
+  },
+  locationCapturedMessage: {
+    id: 'Koordinat GPS berhasil diambil dan disimpan.',
+    en: 'GPS coordinates have been successfully captured and saved.'
+  },
+  locationTimeout: {
+    id: 'Waktu tunggu habis. Coba lagi atau pastikan sinyal GPS kuat.',
+    en: 'Location request timed out. Try again or ensure strong GPS signal.'
+  },
+  locationUnavailable: {
+    id: 'Lokasi tidak tersedia. Pastikan Anda berada di area dengan sinyal GPS yang baik.',
+    en: 'Location is unavailable. Make sure you are in an area with good GPS signal.'
+  },
+  invalidCoordinates: {
+    id: 'Koordinat tidak valid diterima. Silakan coba lagi.',
+    en: 'Invalid coordinates received. Please try again.'
+  },
+  tryAgain: {
+    id: 'Coba Lagi',
+    en: 'Try Again'
+  },
+  useManualLocation: {
+    id: 'Gunakan Lokasi Manual',
+    en: 'Use Manual Location'
+  },
+  manualLocation: {
+    id: 'Lokasi Manual',
+    en: 'Manual Location'
+  },
+  manualLocationMessage: {
+    id: 'GPS tidak dapat digunakan. Apakah Anda ingin menggunakan lokasi default (Jakarta)?',
+    en: 'GPS cannot be used. Would you like to use default location (Jakarta)?'
+  },
+  useDefaultLocation: {
+    id: 'Gunakan Lokasi Default',
+    en: 'Use Default Location'
+  },
+  defaultLocationSet: {
+    id: 'Lokasi Default Diset',
+    en: 'Default Location Set'
+  },
+  defaultLocationMessage: {
+    id: 'Lokasi default Jakarta telah diset. Anda dapat mengubahnya nanti.',
+    en: 'Default Jakarta location has been set. You can change it later.'
   },
   viewCollections: {
     id: 'Lihat Koleksi',
@@ -626,10 +783,6 @@ export const translations = {
   enterReceiptAmount: {
     id: 'Masukkan jumlah resi (default: {defaultAmount})',
     en: 'Enter receipt amount (default: {defaultAmount})'
-  },
-  invalidAmount: {
-    id: 'Jumlah tidak valid',
-    en: 'Invalid amount'
   },
   ok: {
     id: 'OK',
@@ -974,6 +1127,59 @@ export const translations = {
     id: 'Belum ada riwayat onboarding',
     en: 'No onboarding records yet'
   },
+  
+  // Status
+  completed: {
+    id: 'Selesai',
+    en: 'Completed'
+  },
+  pending: {
+    id: 'Pending',
+    en: 'Pending'
+  },
+  failed: {
+    id: 'Gagal',
+    en: 'Failed'
+  },
+  
+  // Photo Labels
+  ktp: {
+    id: 'KTP',
+    en: 'KTP'
+  },
+  outside: {
+    id: 'Luar',
+    en: 'Outside'
+  },
+  inside: {
+    id: 'Dalam',
+    en: 'Inside'
+  },
+  inventory: {
+    id: 'Inventaris',
+    en: 'Inventory'
+  },
+  
+  // Review
+  review: {
+    id: 'Review',
+    en: 'Review'
+  },
+  
+  // Error Messages
+  completeRequiredFields: {
+    id: 'Silakan lengkapi semua field yang wajib diisi pada langkah ini sebelum melanjutkan.',
+    en: 'Please complete all required fields in this step before proceeding.'
+  },
+  fillRequiredFieldsAndPhotos: {
+    id: 'Silakan isi semua field yang wajib dan upload semua foto yang diperlukan sebelum submit.',
+    en: 'Please fill in all required fields and upload all required photos before submitting.'
+  },
+  failedSaveOutletData: {
+    id: 'Gagal menyimpan data outlet. Silakan coba lagi.',
+    en: 'Failed to save outlet data. Please try again.'
+  },
+  
 } as const;
 
 export type TranslationKey = keyof typeof translations; 

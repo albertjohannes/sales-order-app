@@ -2,12 +2,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { BalanceData } from '@/services/storage';
 import React from 'react';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface BalanceDetailsModalProps {
@@ -67,7 +67,7 @@ export default function BalanceDetailsModal({
               <View style={styles.row}>
                 <Text style={styles.label}>{t('outletInfo')} Name:</Text>
                 <Text style={styles.value}>
-                  {balanceData.outlet_Name || t('notAvailable')}
+                  {balanceData.outlet_name || t('notAvailable')}
                 </Text>
               </View>
             </View>

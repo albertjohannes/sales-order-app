@@ -144,6 +144,7 @@ export default function OrderScreen() {
         title={t('order')} 
         showCartIcon={true}
         onCartPress={handleCartPress}
+        cartItemCount={cart.length}
       />
       
       {/* Banner Carousel */}

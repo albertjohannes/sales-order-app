@@ -2,11 +2,11 @@ import HeaderWithSettings from '@/components/HeaderWithSettings';
 import TermsModal from '@/components/TermsModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Invoice, mockInvoices, mockOutlets, Outlet, PaymentCollection } from '@/data/mockData';
-import { savePaymentCollection } from '@/services/storage';
+import { Outlet, PaymentCollection } from '@/data/mockData';
+import { getOutlets, savePaymentCollection } from '@/services/storage';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -31,24 +31,43 @@ const QRScanner = ({ onScan }: { onScan: (data: string) => void }) => {
 };
 
 export default function CollectionScreen() {
-  const { t } = useLanguage();
+  const { t, tText } = useLanguage();
   const router = useRouter();
   
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [cashAmount, setCashAmount] = useState('');
   const [authorizationCode, setAuthorizationCode] = useState('');
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [showOutletModal, setShowOutletModal] = useState(false);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [storedOutlets, setStoredOutlets] = useState<Outlet[]>([]);
+  const [isRequestingApproval, setIsRequestingApproval] = useState(false);
+  const [approvalRequested, setApprovalRequested] = useState(false);
+  const [lockedOutlet, setLockedOutlet] = useState<Outlet | null>(null);
+  const [lockedAmount, setLockedAmount] = useState('');
+
+  // Load stored outlets on component mount
+  useEffect(() => {
+    const loadOutlets = async () => {
+      try {
+        const outlets = await getOutlets();
+        setStoredOutlets(outlets);
+      } catch (error) {
+        console.error('Error loading outlets:', error);
+        // Fallback to empty array if loading fails
+        setStoredOutlets([]);
+      }
+    };
+
+    loadOutlets();
+  }, []);
 
   // Handle QR scan
   const handleScanQR = () => {
     setIsScanning(true);
     // Simulate QR scan - in real app this would open camera
     setTimeout(() => {
-      const mockAuthCode = 'WA-2024-ABC123';
-      setAuthorizationCode(mockAuthCode);
+      // Don't auto-fill, just show scanning complete
       setIsScanning(false);
     }, 2000);
   };
@@ -58,20 +77,81 @@ export default function CollectionScreen() {
     setAuthorizationCode(text);
   };
 
-  // Validate authorization code
-  const validateAuthCode = (code: string) => {
-    return code.startsWith('WA-') || code.startsWith('AUTH-') || code.startsWith('WARUNG-');
+  // Handle cash amount input
+  const handleCashAmountInput = (text: string) => {
+    // Remove non-numeric characters except decimal point
+    const numericText = text.replace(/[^0-9.]/g, '');
+    setCashAmount(numericText);
   };
 
-  // Get available invoices for selected outlet
-  const getAvailableInvoices = () => {
-    if (!selectedOutlet) return [];
-    return mockInvoices.filter(invoice => 
-      invoice.outletId === selectedOutlet.id && invoice.status === 'pending'
+  // Validate authorization code
+  const validateAuthCode = (code: string) => {
+    // Only allow numeric codes with 6-8 digits
+    return /^\d{6,8}$/.test(code);
+  };
+
+  // Validate cash amount
+  const validateCashAmount = (amount: string) => {
+    const numAmount = parseFloat(amount);
+    return !isNaN(numAmount) && numAmount > 0;
+  };
+
+  // Handle approval request
+  const handleRequestApproval = async () => {
+    if (!selectedOutlet) {
+      Alert.alert(t('error'), t('selectOutletFirst'));
+      return;
+    }
+    
+    if (!cashAmount || !validateCashAmount(cashAmount)) {
+      Alert.alert(t('error'), 'Please enter a valid cash amount');
+      return;
+    }
+
+    setIsRequestingApproval(true);
+    
+    // Simulate API call to request approval from outlet
+    setTimeout(() => {
+      setIsRequestingApproval(false);
+      setApprovalRequested(true);
+      // Lock the outlet and amount
+      setLockedOutlet(selectedOutlet);
+      setLockedAmount(cashAmount);
+      Alert.alert(
+        tText({ id: 'Permintaan Persetujuan Terkirim', en: 'Approval Request Sent' }),
+        `Approval request sent to ${selectedOutlet.name}. They will receive an SMS with the authorization code.`,
+        [{ text: t('ok'), style: 'default' }]
+      );
+    }, 2000);
+  };
+
+  // Handle cancel approval request
+  const handleCancelApproval = () => {
+    Alert.alert(
+      tText({ id: 'Batalkan Permintaan Persetujuan', en: 'Cancel Approval Request' }),
+      tText({ id: 'Apakah Anda yakin ingin membatalkan permintaan persetujuan? Outlet tidak akan menerima SMS lagi.', en: 'Are you sure you want to cancel the approval request? The outlet will not receive any more SMS.' }),
+      [
+        { text: t('cancel'), style: 'cancel' },
+        { 
+          text: tText({ id: 'Ya, Batalkan', en: 'Yes, Cancel' }), 
+          style: 'destructive',
+          onPress: () => {
+            // Reset all states
+            setApprovalRequested(false);
+            setLockedOutlet(null);
+            setLockedAmount('');
+            setAuthorizationCode('');
+            // Keep the current outlet and amount selected for easy re-request
+          }
+        }
+      ]
     );
   };
 
   const formatCurrency = (amount: number) => {
+    if (isNaN(amount) || amount <= 0) {
+      return 'Rp 0';
+    }
     return `Rp ${amount.toLocaleString('id-ID')}`;
   };
 
@@ -81,22 +161,21 @@ export default function CollectionScreen() {
       return;
     }
     
-    if (!selectedInvoice) {
-      Alert.alert(t('error'), t('selectInvoiceError'));
+    if (!cashAmount || !validateCashAmount(cashAmount)) {
+      Alert.alert(t('error'), 'Please enter a valid cash amount');
       return;
     }
     
     if (!authorizationCode || !validateAuthCode(authorizationCode)) {
-      Alert.alert(t('error'), t('scanValidAuthCode'));
+      Alert.alert(t('error'), 'Please enter a valid 6-8 digit authorization code');
       return;
     }
     
+    const amount = parseFloat(cashAmount);
+    
     Alert.alert(
       t('confirmTransaction'),
-      t('confirmPaymentMessage', { 
-        amount: formatCurrency(selectedInvoice.amount), 
-        outlet: selectedOutlet.name 
-      }),
+      `Confirm payment collection of ${formatCurrency(amount)} for ${selectedOutlet.name}?`,
       [
         { text: t('cancel'), style: 'cancel' },
         { 
@@ -108,12 +187,12 @@ export default function CollectionScreen() {
                 id: `PAY-${Date.now()}`,
                 outletId: selectedOutlet.id,
                 outletName: selectedOutlet.name,
-                invoiceId: selectedInvoice.id,
-                invoiceAmount: selectedInvoice.amount,
+                invoiceId: `INV-${Date.now()}`, // Generate a generic invoice ID
+                invoiceAmount: amount,
                 authorizationCode: authorizationCode,
                 collectionDate: new Date().toISOString(),
                 status: 'completed',
-                notes: `Payment collected for invoice ${selectedInvoice.id}`
+                notes: `Payment collected for outlet ${selectedOutlet.name} - Amount: ${formatCurrency(amount)}`
               };
               
               // Save to local storage
@@ -147,61 +226,117 @@ export default function CollectionScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. {t('selectOutlet')}</Text>
           <TouchableOpacity 
-            style={styles.selectionButton}
-            onPress={() => setShowOutletModal(true)}
+            style={[styles.selectionButton, approvalRequested && styles.lockedButton]}
+            onPress={() => !approvalRequested && setShowOutletModal(true)}
+            disabled={approvalRequested}
           >
             <View style={styles.selectionContent}>
-              <IconSymbol name="building.2" size={24} color="#007AFF" />
+              <IconSymbol name="building.2" size={24} color={approvalRequested ? "#999" : "#007AFF"} />
               <View style={styles.selectionText}>
-                <Text style={styles.selectionLabel}>
+                <Text style={[styles.selectionLabel, approvalRequested && styles.lockedText]}>
                   {selectedOutlet ? selectedOutlet.name : t('chooseOutlet')}
                 </Text>
                 {selectedOutlet && (
-                  <Text style={styles.selectionSubtext}>{selectedOutlet.address}</Text>
+                  <Text style={[styles.selectionSubtext, approvalRequested && styles.lockedSubtext]}>
+                    {selectedOutlet.streetAddress}
+                  </Text>
                 )}
               </View>
-              <IconSymbol name="chevron.down" size={20} color="#999" />
+              {approvalRequested ? (
+                <IconSymbol name="lock.fill" size={20} color="#999" />
+              ) : (
+                <IconSymbol name="chevron.down" size={20} color="#999" />
+              )}
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Step 2: Select Invoice */}
+        {/* Step 2: Cash Amount Input */}
         {selectedOutlet && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>2. {t('selectInvoice')}</Text>
-            <TouchableOpacity 
-              style={styles.selectionButton}
-              onPress={() => setShowInvoiceModal(true)}
-            >
-              <View style={styles.selectionContent}>
-                <IconSymbol name="doc.text" size={24} color="#007AFF" />
-                <View style={styles.selectionText}>
-                  <Text style={styles.selectionLabel}>
-                    {selectedInvoice ? `Invoice ${selectedInvoice.id}` : t('chooseInvoice')}
-                  </Text>
-                  {selectedInvoice && (
-                    <Text style={styles.selectionSubtext}>
-                      {formatCurrency(selectedInvoice.amount)} • {selectedInvoice.date}
+            <Text style={styles.sectionTitle}>2. {tText({ id: 'Jumlah Uang Tunai', en: 'Cash Amount' })}</Text>
+            <View style={[styles.amountCard, approvalRequested && styles.lockedCard]}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>{tText({ id: 'Masukkan Jumlah Uang Tunai:', en: 'Enter Cash Amount:' })}</Text>
+                <TextInput
+                  style={[styles.inputField, approvalRequested && styles.lockedInputField]}
+                  value={cashAmount}
+                  onChangeText={approvalRequested ? undefined : handleCashAmountInput}
+                  placeholder="Enter amount (e.g., 1500000)"
+                  placeholderTextColor="#999"
+                  keyboardType="numeric"
+                  editable={!approvalRequested}
+                />
+                {cashAmount && (
+                  <View style={styles.validationContainer}>
+                    <IconSymbol 
+                      name={validateCashAmount(cashAmount) ? "checkmark.circle.fill" : "xmark.circle.fill"} 
+                      size={16} 
+                      color={validateCashAmount(cashAmount) ? "#28a745" : "#dc3545"} 
+                    />
+                    <Text style={[
+                      styles.validationText, 
+                      { color: validateCashAmount(cashAmount) ? "#28a745" : "#dc3545" }
+                    ]}>
+                      {validateCashAmount(cashAmount) ? `${tText({ id: 'Jumlah valid', en: 'Valid amount' })}: ${formatCurrency(parseFloat(cashAmount))}` : tText({ id: 'Jumlah tidak valid', en: 'Invalid amount' })}
                     </Text>
-                  )}
-                </View>
-                <IconSymbol name="chevron.down" size={20} color="#999" />
+                  </View>
+                )}
               </View>
-            </TouchableOpacity>
+            </View>
           </View>
         )}
 
-        {/* Step 3: Authorization QR */}
-        {selectedInvoice && (
+        {/* Step 3: Request Approval */}
+        {selectedOutlet && cashAmount && validateCashAmount(cashAmount) && !approvalRequested && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>3. {t('authorization')}</Text>
+            <Text style={styles.sectionTitle}>3. {tText({ id: 'Minta Persetujuan', en: 'Request Approval' })}</Text>
+            <View style={styles.approvalCard}>
+              <View style={styles.approvalContent}>
+                <IconSymbol name="bell.badge" size={32} color="#007AFF" />
+                <Text style={styles.approvalTitle}>{tText({ id: 'Minta Persetujuan dari Outlet', en: 'Request Outlet Approval' })}</Text>
+                <Text style={styles.approvalDescription}>
+                  {tText({ id: 'Kirim permintaan persetujuan ke {outlet} untuk mengumpulkan {amount}. Mereka akan menerima SMS dengan kode otorisasi.', en: 'Send approval request to {outlet} to collect {amount}. They will receive an SMS with the authorization code.' }).replace('{outlet}', selectedOutlet.name).replace('{amount}', formatCurrency(parseFloat(cashAmount)))}
+                </Text>
+                <TouchableOpacity 
+                  style={[styles.approvalButton, isRequestingApproval && styles.approvalButtonDisabled]}
+                  onPress={handleRequestApproval}
+                  disabled={isRequestingApproval}
+                >
+                  <Text style={styles.approvalButtonText}>
+                    {isRequestingApproval ? tText({ id: 'Meminta Persetujuan...', en: 'Requesting Approval...' }) : tText({ id: 'Minta Persetujuan', en: 'Request Approval' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Step 4: Authorization Code Input */}
+        {approvalRequested && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>4. {t('authorization')}</Text>
             <View style={styles.qrCard}>
+              <View style={styles.approvalStatusContainer}>
+                <IconSymbol name="checkmark.circle.fill" size={24} color="#28a745" />
+                <Text style={styles.approvalStatusText}>{tText({ id: 'Permintaan Persetujuan Terkirim', en: 'Approval Request Sent' })}</Text>
+                <Text style={styles.approvalStatusSubtext}>
+                  {tText({ id: 'Menunggu kode otorisasi dari {outlet}', en: 'Waiting for authorization code from {outlet}' }).replace('{outlet}', lockedOutlet?.name || '')}
+                </Text>
+                <Text style={styles.lockedAmountText}>
+                  {tText({ id: 'Jumlah yang diminta: {amount}', en: 'Requested amount: {amount}' }).replace('{amount}', formatCurrency(parseFloat(lockedAmount)))}
+                </Text>
+              </View>
+              
+              {/* Cancel Button */}
               <TouchableOpacity 
-                style={styles.scannerButton}
-                onPress={handleScanQR}
-                disabled={isScanning}
+                style={styles.cancelButton}
+                onPress={handleCancelApproval}
               >
-                <QRScanner onScan={setAuthorizationCode} />
+                <IconSymbol name="xmark.circle" size={16} color="#dc3545" />
+                <Text style={styles.cancelButtonText}>
+                  {tText({ id: 'Batalkan Permintaan', en: 'Cancel Request' })}
+                </Text>
               </TouchableOpacity>
               
               {/* Manual Input Field */}
@@ -211,8 +346,10 @@ export default function CollectionScreen() {
                   style={styles.inputField}
                   value={authorizationCode}
                   onChangeText={handleManualInput}
-                  placeholder={t('enterAuthCodePlaceholder')}
+                  placeholder="Enter 6-8 digit code from SMS"
                   placeholderTextColor="#999"
+                  keyboardType="numeric"
+                  maxLength={8}
                 />
                 {authorizationCode && (
                   <View style={styles.validationContainer}>
@@ -235,7 +372,7 @@ export default function CollectionScreen() {
         )}
 
         {/* Submit Button */}
-        {selectedOutlet && selectedInvoice && authorizationCode && validateAuthCode(authorizationCode) && (
+        {selectedOutlet && cashAmount && validateCashAmount(cashAmount) && approvalRequested && authorizationCode && validateAuthCode(authorizationCode) && (
           <View style={styles.submitSection}>
             <TouchableOpacity 
               style={styles.submitButton}
@@ -287,62 +424,35 @@ export default function CollectionScreen() {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={mockOutlets}
+            data={storedOutlets}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.modalItem}
                 onPress={() => {
                   setSelectedOutlet(item);
-                  setSelectedInvoice(null); // Reset invoice when outlet changes
                   setShowOutletModal(false);
                 }}
               >
                 <View style={styles.modalItemContent}>
                   <Text style={styles.modalItemTitle}>{item.name}</Text>
-                  <Text style={styles.modalItemSubtitle}>{item.address}</Text>
+                  <Text style={styles.modalItemSubtitle}>{item.streetAddress}</Text>
                   <Text style={styles.modalItemId}>{item.id}</Text>
                 </View>
               </TouchableOpacity>
+            )}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyState}>
+                <IconSymbol name="building.2" size={48} color="#ccc" />
+                <Text style={styles.emptyStateText}>No outlets found</Text>
+                <Text style={styles.emptyStateSubtext}>Complete onboarding to add your first outlet</Text>
+              </View>
             )}
           />
         </View>
       </Modal>
 
-      {/* Invoice Selection Modal */}
-      <Modal
-        visible={showInvoiceModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t('selectInvoice')}</Text>
-            <TouchableOpacity onPress={() => setShowInvoiceModal(false)}>
-              <IconSymbol name="xmark" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={getAvailableInvoices()}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  setSelectedInvoice(item);
-                  setShowInvoiceModal(false);
-                }}
-              >
-                <View style={styles.modalItemContent}>
-                  <Text style={styles.modalItemTitle}>Invoice {item.id}</Text>
-                  <Text style={styles.modalItemSubtitle}>{formatCurrency(item.amount)}</Text>
-                  <Text style={styles.modalItemId}>{item.date}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      </Modal>
+
 
       {/* Terms Modal */}
       <TermsModal 
@@ -366,13 +476,13 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   selectionButton: {
     backgroundColor: 'white',
@@ -399,6 +509,13 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  amountCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
   qrCard: {
     backgroundColor: '#00B4D8',
     borderRadius: 16,
@@ -406,6 +523,107 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     position: 'relative',
+  },
+  approvalCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  approvalContent: {
+    alignItems: 'center',
+  },
+  approvalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 12,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  approvalDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  approvalButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  approvalButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  approvalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  approvalStatusContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  approvalStatusText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  approvalStatusSubtext: {
+    color: 'white',
+    fontSize: 14,
+    marginTop: 4,
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+  lockedAmountText: {
+    color: 'white',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+    opacity: 0.9,
+    fontWeight: '600',
+  },
+  lockedButton: {
+    backgroundColor: '#f8f9fa',
+    borderColor: '#e0e0e0',
+  },
+  lockedText: {
+    color: '#999',
+  },
+  lockedSubtext: {
+    color: '#ccc',
+  },
+  lockedCard: {
+    backgroundColor: '#f8f9fa',
+    borderColor: '#e0e0e0',
+  },
+  lockedInputField: {
+    backgroundColor: '#f0f0f0',
+    color: '#999',
+  },
+  cancelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(220, 53, 69, 0.3)',
+  },
+  cancelButtonText: {
+    color: '#dc3545',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   scannerContainer: {
     alignItems: 'center',
@@ -424,25 +642,27 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: '100%',
-    marginTop: 20,
+    marginTop: 12,
   },
   inputLabel: {
-    color: 'white',
+    color: '#333',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
   },
   inputField: {
-    backgroundColor: 'white',
+    backgroundColor: '#f8f9fa',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     color: '#333',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   validationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 6,
   },
   validationText: {
     fontSize: 12,
@@ -534,5 +754,78 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginTop: 4,
+  },
+  emptyState: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  invoiceDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  invoiceDate: {
+    fontSize: 12,
+    color: '#999',
+  },
+  statusIndicator: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  statusPending: {
+    backgroundColor: '#FF9800',
+  },
+  statusPaid: {
+    backgroundColor: '#4CAF50',
+  },
+  statusText: {
+    fontSize: 10,
+    color: 'white',
+    fontWeight: '600',
+  },
+  outletSummary: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  summaryAmount: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: 'bold',
+  },
+  summaryCount: {
+    fontSize: 14,
+    color: '#28a745',
+    fontWeight: '600',
   },
 }); 

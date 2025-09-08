@@ -1,7 +1,7 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { PaymentCollection, Transaction } from '@/data/mockData';
-import { getPaymentCollections, getTransactions, saveTransaction } from '@/services/storage';
+import { Outlet, PaymentCollection, Transaction } from '@/data/mockData';
+import { getOutlets, getPaymentCollections, getTransactions } from '@/services/storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,12 +22,12 @@ export default function HistoryTabScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   
-  // Get initial tab from URL params or default to orders
-  const initialTab = (params.tab as TabType) || 'orders';
+  // Get initial tab from URL params or default to collections
+  const initialTab = (params.tab as TabType) || 'collections';
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [paymentCollections, setPaymentCollections] = useState<PaymentCollection[]>([]);
-  const [onboardingRecords, setOnboardingRecords] = useState<any[]>([]);
+  const [onboardingRecords, setOnboardingRecords] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,17 +44,14 @@ export default function HistoryTabScreen() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [storedTransactions, storedCollections] = await Promise.all([
+      const [storedTransactions, storedCollections, storedOutlets] = await Promise.all([
         getTransactions(),
-        getPaymentCollections()
+        getPaymentCollections(),
+        getOutlets()
       ]);
       setTransactions(storedTransactions);
       setPaymentCollections(storedCollections);
-      
-      // TODO: Load onboarding records when storage is implemented
-      // const storedOnboardingRecords = await getOnboardingRecords();
-      // setOnboardingRecords(storedOnboardingRecords);
-      setOnboardingRecords([]); // Placeholder for now
+      setOnboardingRecords(storedOutlets);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -62,61 +59,31 @@ export default function HistoryTabScreen() {
     }
   };
 
-  const handleTransactionTap = (transaction: Transaction) => {
-    // Navigate to order detail page
-    router.push(`/order/order-detail?transactionId=${transaction.transaction_id}`);
-  };
 
-  const handleReceiptConfirm = async (transaction: Transaction) => {
-    if (transaction.has_good_receipt) {
-      return; // Already confirmed
-    }
 
+  const handleOnboardingRecordTap = (outlet: Outlet) => {
+    // Show detailed outlet information in an alert
     Alert.alert(
-      t('confirmReceipt'),
-      t('confirmReceiptMessage', { transactionId: transaction.transaction_id }),
+      outlet.name,
+      `${t('outletAddress')}: ${outlet.streetAddress}\n` +
+      `${t('outletProvince')}: ${outlet.province?.name || t('notAvailable')}\n` +
+      `${t('outletCity')}: ${outlet.regency?.name || t('notAvailable')}\n` +
+      `${t('district')}: ${outlet.district?.name || t('notAvailable')}\n` +
+      `${t('village')}: ${outlet.village?.name || t('notAvailable')}\n` +
+      `${t('postalCode')}: ${outlet.postalCode}\n` +
+      `${t('coordinates')}: ${outlet.latitude && outlet.longitude ? `${outlet.latitude}, ${outlet.longitude}` : t('notAvailable')}\n` +
+      `${t('photos')}: ${t('ktp')} ${outlet.ktpPhoto ? '✓' : '✗'}, ${t('outside')} ${outlet.outsidePhotos.filter(p => p).length}/3, ${t('inside')} ${outlet.insidePhotos.filter(p => p).length}/3, ${t('inventory')} ${outlet.inventoryPhotos.filter(p => p).length}/3\n` +
+      `Created: ${formatDateTime(outlet.createdAt)}\n` +
+      `Last Updated: ${formatDateTime(outlet.updatedAt)}`,
       [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('confirm'),
-          onPress: async () => {
-            try {
-              // Simulate API delay
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
-              // Mock receipt confirmation
-              const updatedTransaction: Transaction = {
-                ...transaction,
-                has_good_receipt: true,
-                good_receipt_total: transaction.total,
-              };
-              
-              // Save updated transaction
-              await saveTransaction(updatedTransaction);
-              
-              // Reload transactions
-              await loadData();
-              
-              Alert.alert(t('confirmReceipt'), t('receiptConfirmed'));
-            } catch (error) {
-              console.error('Error confirming transaction:', error);
-              Alert.alert(t('error'), t('receiptConfirmError'));
-            }
-          }
-        }
+        { text: t('close'), style: 'cancel' }
       ]
     );
   };
 
-  // Group transactions by date
-  const groupedTransactions = transactions.reduce((groups, transaction) => {
-    const date = new Date(transaction.date).toLocaleDateString('en-CA');
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(transaction);
-    return groups;
-  }, {} as Record<string, Transaction[]>);
+
+
+
 
   // Group payment collections by date
   const groupedCollections = paymentCollections.reduce((groups, collection) => {
@@ -139,10 +106,6 @@ export default function HistoryTabScreen() {
   }, {} as Record<string, any[]>);
 
   // Sort dates in descending order
-  const sortedTransactionDates = Object.keys(groupedTransactions).sort((a, b) => 
-    new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()
-  );
-
   const sortedCollectionDates = Object.keys(groupedCollections).sort((a, b) => 
     new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()
   );
@@ -164,60 +127,18 @@ export default function HistoryTabScreen() {
     });
   };
 
-  const renderTransaction = ({ item }: { item: Transaction }) => (
-    <TouchableOpacity 
-      style={[
-        styles.transactionCard,
-        !item.has_good_receipt && styles.pendingTransaction
-      ]}
-      onPress={() => handleTransactionTap(item)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.transactionHeader}>
-        <View style={styles.transactionInfo}>
-          <Text style={styles.transactionTime}>{formatDate(item.date)}</Text>
-          <Text style={styles.transactionId} numberOfLines={1}>
-            {item.transaction_id}
-          </Text>
-          {item.has_good_receipt ? (
-            <Text style={styles.receiptComplete}>{t('receiptComplete')}</Text>
-          ) : (
-            <TouchableOpacity 
-              onPress={() => handleReceiptConfirm(item)}
-              style={styles.receiptPendingButton}
-            >
-              <Text style={styles.receiptPending}>{t('receiptPending')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      
-      {item.loan_id && (
-        <View style={styles.loanIdContainer}>
-          <View style={styles.loanIdBanner}>
-            <Text style={styles.loanIdText}>#{item.loan_id}</Text>
-          </View>
-        </View>
-      )}
-      
-      <View style={styles.transactionAmountContainer}>
-        <Text style={styles.transactionTotal}>{formatPrice(item.total)}</Text>
-      </View>
-      
-      <View style={styles.itemsList}>
-        {item.items.map((cartItem, index) => (
-          <View key={index} style={styles.itemRow}>
-            <Text style={styles.itemName} numberOfLines={1}>
-              {cartItem.name} x{cartItem.quantity}
-            </Text>
-            <Text style={styles.itemPrice}>
-              {formatPrice(cartItem.price * cartItem.quantity)}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </TouchableOpacity>
-  );
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+
 
   const renderCollection = ({ item }: { item: PaymentCollection }) => (
     <TouchableOpacity 
@@ -269,52 +190,84 @@ export default function HistoryTabScreen() {
     </TouchableOpacity>
   );
 
-  const renderOnboardingRecord = ({ item }: { item: any }) => (
+  const renderOnboardingRecord = ({ item }: { item: Outlet }) => (
     <TouchableOpacity 
       style={[
         styles.transactionCard,
-        item.status === 'approved' && styles.completedCollection,
-        item.status === 'pending' && styles.pendingCollection,
-        item.status === 'rejected' && styles.failedCollection
+        styles.completedCollection // All stored outlets are considered completed
       ]}
       activeOpacity={0.8}
+      onPress={() => handleOnboardingRecordTap(item)}
     >
       <View style={styles.transactionHeader}>
         <View style={styles.transactionInfo}>
-          <Text style={styles.transactionTime}>{formatDate(item.createdAt)}</Text>
+          <Text style={styles.transactionTime}>{formatDateTime(item.createdAt)}</Text>
           <Text style={styles.transactionId} numberOfLines={1}>
             {item.id}
           </Text>
           <View style={[
             styles.statusBadge,
-            item.status === 'approved' && styles.statusCompleted,
-            item.status === 'pending' && styles.statusPending,
-            item.status === 'rejected' && styles.statusFailed
+            styles.statusCompleted
           ]}>
             <Text style={styles.statusText}>
-              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+              {t('completed')}
             </Text>
           </View>
+        </View>
+        <View style={styles.photoSummary}>
+          <Text style={styles.photoSummaryText}>
+            📸 {item.ktpPhoto ? '✓' : '✗'} • {item.outsidePhotos.filter(p => p).length}/3 • {item.insidePhotos.filter(p => p).length}/3 • {item.inventoryPhotos.filter(p => p).length}/3
+          </Text>
         </View>
       </View>
       
       <View style={styles.collectionDetails}>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>{t('outletName')}:</Text>
-          <Text style={styles.detailValue}>{item.outletName}</Text>
+          <Text style={styles.detailValue}>{item.name}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>{t('outletAddress')}:</Text>
-          <Text style={styles.detailValue} numberOfLines={2}>{item.address}</Text>
+          <Text style={styles.detailValue} numberOfLines={2}>{item.streetAddress}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>{t('outletCity')}:</Text>
-          <Text style={styles.detailValue}>{item.city}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{t('outletProvince')}:</Text>
-          <Text style={styles.detailValue}>{item.province}</Text>
-        </View>
+                          <Text style={styles.detailValue}>{item.regency?.name || t('notAvailable')}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('outletProvince')}:</Text>
+                <Text style={styles.detailValue}>{item.province?.name || t('notAvailable')}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('district')}:</Text>
+                <Text style={styles.detailValue}>{item.district?.name || t('notAvailable')}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('village')}:</Text>
+                <Text style={styles.detailValue}>{item.village?.name || t('notAvailable')}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('postalCode')}:</Text>
+                <Text style={styles.detailValue}>{item.postalCode}</Text>
+              </View>
+              {item.latitude && item.longitude && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{t('coordinates')}:</Text>
+                  <Text style={styles.detailValue}>{item.latitude}, {item.longitude}</Text>
+                </View>
+              )}
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('photos')}:</Text>
+                <Text style={styles.detailValue}>
+                  {item.ktpPhoto ? '✓' : '✗'} • 
+                  {item.outsidePhotos.filter(p => p).length}/3 • 
+                  {item.insidePhotos.filter(p => p).length}/3 • 
+                  {item.inventoryPhotos.filter(p => p).length}/3
+                </Text>
+              </View>
+              <View style={styles.photoLegend}>
+                <Text style={styles.photoLegendText}>{t('ktp')} • {t('outside')} • {t('inside')} • {t('inventory')}</Text>
+              </View>
       </View>
     </TouchableOpacity>
   );
@@ -322,20 +275,14 @@ export default function HistoryTabScreen() {
   const renderDateSection = ({ item }: { item: string }) => (
     <View style={styles.dateSection}>
       <Text style={styles.dateHeader}>{formatDate(item)}</Text>
-      {activeTab === 'orders' ? (
-        groupedTransactions[item]?.map((transaction, index) => (
-          <View key={transaction.transaction_id} style={styles.transactionWrapper}>
-            {renderTransaction({ item: transaction })}
-          </View>
-        ))
-      ) : activeTab === 'collections' ? (
+      {activeTab === 'collections' ? (
         groupedCollections[item]?.map((collection: PaymentCollection, index: number) => (
           <View key={collection.id} style={styles.transactionWrapper}>
             {renderCollection({ item: collection })}
           </View>
         ))
       ) : (
-        groupedOnboardingRecords[item]?.map((record: any, index: number) => (
+        groupedOnboardingRecords[item]?.map((record: Outlet, index: number) => (
           <View key={record.id} style={styles.transactionWrapper}>
             {renderOnboardingRecord({ item: record })}
           </View>
@@ -347,8 +294,7 @@ export default function HistoryTabScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyHistory}>
       <Text style={styles.emptyHistoryText}>
-        {activeTab === 'orders' ? t('noTransactions') : 
-         activeTab === 'collections' ? t('noCollections') : 
+        {activeTab === 'collections' ? t('noCollections') : 
          t('noOnboardingRecords')}
       </Text>
     </View>
@@ -361,20 +307,17 @@ export default function HistoryTabScreen() {
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'orders' && styles.activeTabButton]}
-          onPress={() => setActiveTab('orders')}
-        >
-          <Text style={[styles.tabText, activeTab === 'orders' && styles.activeTabText]}>
-            {t('orders')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           style={[styles.tabButton, activeTab === 'collections' && styles.activeTabButton]}
           onPress={() => setActiveTab('collections')}
         >
           <Text style={[styles.tabText, activeTab === 'collections' && styles.activeTabText]}>
             {t('collections')}
           </Text>
+          {paymentCollections.length > 0 && (
+            <View style={styles.tabBadge}>
+              <Text style={styles.tabBadgeText}>{paymentCollections.length}</Text>
+            </View>
+          )}
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabButton, activeTab === 'onboard' && styles.activeTabButton]}
@@ -383,6 +326,11 @@ export default function HistoryTabScreen() {
           <Text style={[styles.tabText, activeTab === 'onboard' && styles.activeTabText]}>
             {t('onboard')}
           </Text>
+          {onboardingRecords.length > 0 && (
+            <View style={styles.tabBadge}>
+              <Text style={styles.tabBadgeText}>{onboardingRecords.length}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
       
@@ -393,7 +341,6 @@ export default function HistoryTabScreen() {
       ) : (
         <FlatList
           data={
-            activeTab === 'orders' ? sortedTransactionDates : 
             activeTab === 'collections' ? sortedCollectionDates : 
             sortedOnboardingDates
           }
@@ -432,16 +379,18 @@ const styles = StyleSheet.create({
   },
   transactionCard: {
     backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(102, 126, 234, 0.05)',
   },
   transactionHeader: {
     flexDirection: 'row',
@@ -570,35 +519,38 @@ const styles = StyleSheet.create({
   // New styles for collections tab
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
+    backgroundColor: 'white',
+    borderRadius: 16,
     marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 4,
+    marginBottom: 20,
+    padding: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(102, 126, 234, 0.1)',
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   activeTabButton: {
-    backgroundColor: '#007AFF',
-    shadowColor: '#007AFF',
+    backgroundColor: '#667eea',
+    shadowColor: '#667eea',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 3,
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#6c757d',
   },
@@ -647,5 +599,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '600',
+  },
+  photoLegend: {
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  photoLegendText: {
+    fontSize: 11,
+    color: '#999',
+    fontStyle: 'italic',
+  },
+  photoSummary: {
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+  photoSummaryText: {
+    fontSize: 12,
+    color: '#666',
+    fontFamily: 'monospace',
+  },
+  tabBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  tabBadgeText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
 }); 

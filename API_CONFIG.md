@@ -20,9 +20,21 @@ EXPO_PUBLIC_API_URL=https://sales-order-backend.vercel.app/api
 ## How It Works
 
 The app automatically detects the environment:
-1. If `EXPO_PUBLIC_API_URL` is set, it uses that URL
-2. Otherwise, it defaults to the production Vercel URL
-3. For local development, start the backend with `npm run dev` in the backend directory
+1. **Environment Override**: If `EXPO_PUBLIC_API_URL` is set, it uses that URL
+2. **Development Mode**: If running in development (`__DEV__`), it uses localhost
+3. **Production Mode**: Otherwise, it defaults to the production Vercel URL
+
+## Development vs Production
+
+### Development Mode (`npm start`)
+- **API URL**: `http://localhost:4000/api`
+- **Requires**: Backend running locally (`npm run dev` in backend directory)
+- **Use Case**: Local development and testing
+
+### Production Mode (`eas build`)
+- **API URL**: `https://sales-order-backend.vercel.app/api`
+- **Requires**: No local backend needed
+- **Use Case**: Production builds and app store releases
 
 ## Testing
 

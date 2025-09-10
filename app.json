@@ -11,8 +11,10 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app needs location access to capture GPS coordinates for outlet location."
-      }
+        "NSLocationWhenInUseUsageDescription": "This app needs location access to capture GPS coordinates for outlet location.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.albertandme.salesorderapp"
     },
     "android": {
       "adaptiveIcon": {

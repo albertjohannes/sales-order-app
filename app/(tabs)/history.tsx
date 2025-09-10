@@ -1,7 +1,9 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection, Transaction } from '@/data/mockData';
 import { getOutlets, getPaymentCollections, getTransactions } from '@/services/storage';
+import { useApi } from '@/services/api';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -19,6 +21,8 @@ type TabType = 'orders' | 'collections' | 'onboard';
 
 export default function HistoryTabScreen() {
   const { t } = useLanguage();
+  const { email } = useAuth();
+  const api = useApi();
   const router = useRouter();
   const params = useLocalSearchParams();
   
@@ -44,14 +48,33 @@ export default function HistoryTabScreen() {
   const loadData = async () => {
     try {
       setLoading(true);
+      
+      // Load from local storage
       const [storedTransactions, storedCollections, storedOutlets] = await Promise.all([
         getTransactions(),
         getPaymentCollections(),
         getOutlets()
       ]);
+      
       setTransactions(storedTransactions);
       setPaymentCollections(storedCollections);
       setOnboardingRecords(storedOutlets);
+      
+      // Also try to load from backend API (optional - don't fail if backend is down)
+      if (email) {
+        try {
+          const [backendCollections, backendOnboarding] = await Promise.all([
+            api.getCollections(),
+            api.getOnboarding()
+          ]);
+          
+          console.log('Backend data loaded:', { backendCollections, backendOnboarding });
+          // You could merge backend data with local data here if needed
+        } catch (apiError) {
+          console.log('Backend data not available:', apiError);
+          // Don't show error to user, just log it
+        }
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

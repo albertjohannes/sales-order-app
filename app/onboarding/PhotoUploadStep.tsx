@@ -2,14 +2,14 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Image,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { ImagePickerResponse, launchCamera, MediaType } from 'react-native-image-picker';
 
@@ -62,23 +62,43 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
   };
 
   const useTestImage = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    // Use a placeholder image for testing
-    const testImageUri = 'https://via.placeholder.com/400x300/007AFF/FFFFFF?text=Test+Photo';
-    savePhoto(testImageUri, type, index);
+    // Use a placeholder base64 image for testing
+    const testBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    savePhoto(testBase64, type, index);
+  };
+
+  const convertUriToBase64 = async (uri: string, type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        savePhoto(base64String, type, index);
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('Error converting URI to base64:', error);
+      Alert.alert(t('error'), 'Failed to process image');
+    }
   };
 
   const openCamera = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
     const options = {
       mediaType: 'photo' as MediaType,
       quality: 0.8 as any,
-      includeBase64: false,
+      includeBase64: true,
     };
 
     launchCamera(options, (response: ImagePickerResponse) => {
       if (response.assets && response.assets[0]) {
-        const photoUri = response.assets[0].uri;
-        if (photoUri) {
-          savePhoto(photoUri, type, index);
+        const asset = response.assets[0];
+        if (asset.uri && asset.base64) {
+          const base64String = `data:${asset.type};base64,${asset.base64}`;
+          savePhoto(base64String, type, index);
+        } else if (asset.uri) {
+          // Fallback: convert URI to base64
+          convertUriToBase64(asset.uri, type, index);
         }
       } else if (response.errorMessage) {
         Alert.alert(t('error'), response.errorMessage);

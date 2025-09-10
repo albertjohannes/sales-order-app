@@ -1,8 +1,10 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import TermsModal from '@/components/TermsModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection } from '@/data/mockData';
+import { useApi } from '@/services/api';
 import { getOutlets, savePaymentCollection } from '@/services/storage';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -32,6 +34,8 @@ const QRScanner = ({ onScan }: { onScan: (data: string) => void }) => {
 
 export default function CollectionScreen() {
   const { t, tText } = useLanguage();
+  const { email } = useAuth();
+  const api = useApi();
   const router = useRouter();
   
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
@@ -182,7 +186,7 @@ export default function CollectionScreen() {
           text: t('confirm'), 
           onPress: async () => {
             try {
-              // Create payment collection record
+              // Create payment collection record for local storage
               const paymentCollection: PaymentCollection = {
                 id: `PAY-${Date.now()}`,
                 outletId: selectedOutlet.id,
@@ -197,6 +201,21 @@ export default function CollectionScreen() {
               
               // Save to local storage
               await savePaymentCollection(paymentCollection);
+              
+              // Send to backend API
+              try {
+                const result = await api.createCollection({
+                  outletId: selectedOutlet.id,
+                  amount: amount,
+                  method: 'cash',
+                  note: `Payment collected for outlet ${selectedOutlet.name} - Amount: ${formatCurrency(amount)}`,
+                  attachments: [] // Add any receipt photos here if needed
+                });
+                console.log('Collection data sent to backend:', result);
+              } catch (apiError) {
+                console.error('Error sending to backend:', apiError);
+                // Don't show error to user, just log it
+              }
               
               // Navigate to success page with redirect to collections tab
               router.push('/shared/success?type=payment&redirect=collections');

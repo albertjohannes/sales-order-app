@@ -1,5 +1,7 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useApi } from '@/services/api';
 import { saveOutlet } from '@/services/storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -34,6 +36,8 @@ interface OutletForm {
 
 export default function OnboardingScreen() {
   const { t } = useLanguage();
+  const { email } = useAuth();
+  const api = useApi();
   const router = useRouter();
   
   const [formData, setFormData] = useState<OutletForm>({
@@ -177,6 +181,15 @@ export default function OnboardingScreen() {
 
         // Save to local storage
         await saveOutlet(outletData);
+
+        // Send to backend API
+        try {
+          const result = await api.createOnboarding(outletData);
+          console.log('Onboarding data sent to backend:', result);
+        } catch (error) {
+          console.error('Error sending to backend:', error);
+          // Don't show error to user, just log it
+        }
 
         // Show success message
         Alert.alert(

@@ -1,4 +1,5 @@
 import ProductImage from '@/components/ProductImage';
+import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -12,16 +13,36 @@ import {
 } from 'react-native';
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleLogin = () => {
-    if (username.trim() && password.trim()) {
-      // Simple validation - just check if fields are not empty
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await login(email.trim());
       router.replace('/(tabs)');
-    } else {
-      Alert.alert('Error', 'Please enter both username and password');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to login. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,10 +62,11 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            value={username}
-            onChangeText={setUsername}
+            value={email}
+            onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
+            autoComplete="email"
           />
           
           <View style={styles.passwordContainer}>
@@ -63,8 +85,14 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
           
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
+          <TouchableOpacity 
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.loginButtonText}>
+              {loading ? 'Logging in...' : 'Login'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -143,6 +171,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#ccc',
   },
   footer: {
     paddingVertical: 20,

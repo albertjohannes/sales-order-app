@@ -1,5 +1,5 @@
-import { useAuth } from '@/contexts/AuthContext';
 import { API_CONFIG } from '@/config/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const API_BASE_URL = API_CONFIG.getCurrentUrl();
 

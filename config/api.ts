@@ -4,7 +4,7 @@ export const API_CONFIG = {
   DEV_URL: 'http://localhost:4000/api',
   
   // Production URL (replace with your actual Vercel URL)
-  PROD_URL: 'https://your-app-name.vercel.app/api',
+  PROD_URL: 'https://sales-order-backend.vercel.app/api',
   
   // Get current API URL based on environment
   getCurrentUrl: () => {
@@ -12,7 +12,7 @@ export const API_CONFIG = {
       return process.env.EXPO_PUBLIC_API_URL;
     }
     
-    // Default to development for now
-    return 'http://localhost:4000/api';
+    // Default to production URL
+    return 'https://sales-order-backend.vercel.app/api';
   }
 };

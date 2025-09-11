@@ -181,24 +181,120 @@ EXPO_PUBLIC_API_URL=https://staging-api.vercel.app/api
 EXPO_PUBLIC_API_URL=https://sales-order-backend.vercel.app/api
 ```
 
-## Building for Production
+## Building and Deployment
 
-### EAS Build
+### Build Profiles
 
-1. **Configure EAS**
-   ```bash
-   eas build:configure
-   ```
+The app has three build profiles configured in `eas.json`:
 
-2. **Build for Android**
-   ```bash
-   eas build --platform android
-   ```
+#### **🔧 Development Profile**
+- **Purpose**: Development with Expo Dev Client
+- **Output**: Development build for testing
+- **Command**: `eas build --platform android --profile development`
 
-3. **Build for iOS**
-   ```bash
-   eas build --platform ios
-   ```
+#### **📱 Preview Profile** 
+- **Purpose**: Internal testing and distribution
+- **Output**: **APK file** (can install directly on Android)
+- **Command**: `eas build --platform android --profile preview`
+- **Use Case**: Testing, internal distribution, direct installation
+
+#### **🚀 Production Profile**
+- **Purpose**: Google Play Store submission
+- **Output**: **AAB file** (Android App Bundle)
+- **Command**: `eas build --platform android --profile production`
+- **Use Case**: App Store submission, production deployment
+
+### Build Commands
+
+#### **Android Builds**
+
+```bash
+# Development build (with dev client)
+eas build --platform android --profile development
+
+# Preview build (APK - for testing)
+eas build --platform android --profile preview
+
+# Production build (AAB - for Play Store)
+eas build --platform android --profile production
+
+# Build both platforms
+eas build --platform all --profile preview
+```
+
+#### **iOS Builds**
+
+```bash
+# Development build
+eas build --platform ios --profile development
+
+# Preview build (simulator)
+eas build --platform ios --profile preview
+
+# Production build (App Store)
+eas build --platform ios --profile production
+```
+
+#### **Build with Custom Options**
+
+```bash
+# Build with specific message
+eas build --platform android --profile preview --message "Fixed login bug"
+
+# Build with auto-increment version
+eas build --platform android --profile production --auto-submit
+
+# Build and submit to store
+eas build --platform android --profile production --auto-submit
+```
+
+### Over-the-Air Updates (OTA)
+
+For JavaScript/TypeScript changes without rebuilding:
+
+#### **Publish Updates**
+
+```bash
+# Preview channel (for testing)
+eas update --branch preview --message "Fixed UI bug"
+
+# Production channel (for users)
+eas update --branch production --message "Updated API endpoints"
+
+# Using channel instead of branch
+eas update --channel preview --message "UI improvements"
+eas update --channel production --message "Bug fixes"
+```
+
+#### **Update Management**
+
+```bash
+# List all updates
+eas update:list
+
+# View specific update
+eas update:view [update-id]
+
+# Rollback to previous version
+eas update:rollback
+
+# Delete specific update
+eas update:delete [update-id]
+```
+
+#### **What Can Be Updated OTA**
+
+✅ **JavaScript/TypeScript code changes**
+✅ **UI/UX updates** 
+✅ **Configuration changes**
+✅ **Asset updates** (images, fonts)
+✅ **API endpoint changes**
+✅ **Business logic updates**
+
+❌ **Native dependencies** (new packages)
+❌ **Native code changes**
+❌ **App permissions**
+❌ **App version changes**
 
 ### Build Configuration
 
@@ -206,6 +302,105 @@ The app automatically uses the production API URL in builds:
 - **Development builds**: Use localhost (if available) or production
 - **Production builds**: Always use production API
 - **Environment override**: Always respected if set
+
+## Development Workflow
+
+### **Quick Start (Local Development)**
+
+1. **Start Backend**
+   ```bash
+   cd sales-order-be
+   npm run dev
+   # Backend runs on http://localhost:4000
+   ```
+
+2. **Start Mobile App**
+   ```bash
+   cd sales-order-app
+   npm start
+   # App automatically uses localhost API
+   ```
+
+### **Testing Workflow**
+
+1. **Make Code Changes**
+   - Edit JavaScript/TypeScript files
+   - Update UI components
+   - Modify API calls
+
+2. **Test Locally**
+   ```bash
+   # App automatically reloads with changes
+   # Test with local backend
+   ```
+
+3. **Publish OTA Update** (if no native changes)
+   ```bash
+   eas update --branch preview --message "Your changes"
+   ```
+
+4. **Build New APK** (if native changes)
+   ```bash
+   eas build --platform android --profile preview
+   ```
+
+### **Production Deployment Workflow**
+
+1. **Final Testing**
+   ```bash
+   # Test with production API
+   eas update --branch preview --message "Final testing"
+   ```
+
+2. **Deploy to Users**
+   ```bash
+   # Deploy OTA update
+   eas update --branch production --message "Production release"
+   ```
+
+3. **App Store Submission** (if needed)
+   ```bash
+   # Build AAB for Play Store
+   eas build --platform android --profile production
+   
+   # Submit to store
+   eas submit --platform android
+   ```
+
+### **Common Workflows**
+
+#### **Bug Fix (JavaScript only)**
+```bash
+# 1. Fix the bug in code
+# 2. Test locally
+npm start
+
+# 3. Deploy fix
+eas update --branch production --message "Fixed login bug"
+```
+
+#### **New Feature (UI only)**
+```bash
+# 1. Implement feature
+# 2. Test locally
+npm start
+
+# 3. Deploy feature
+eas update --branch production --message "Added new feature"
+```
+
+#### **New Native Dependency**
+```bash
+# 1. Install new package
+npm install new-package
+
+# 2. Build new APK
+eas build --platform android --profile preview
+
+# 3. Test new APK
+# 4. Deploy to production
+eas build --platform android --profile production
+```
 
 ## API Testing
 
@@ -232,7 +427,7 @@ curl -H "X-Agent-Email: test@example.com" \
 
 ## Troubleshooting
 
-### Common Issues
+### **API Issues**
 
 1. **API calls failing in development**
    - Ensure backend is running: `cd sales-order-be && npm run dev`
@@ -245,18 +440,149 @@ curl -H "X-Agent-Email: test@example.com" \
 3. **Authentication errors**
    - Ensure `X-Agent-Email` header is being sent
    - Check if user is logged in with valid email
+   - Verify email ends with `@fairbanc.app`
 
 4. **Data not syncing**
    - Check network connectivity
    - Verify API responses in browser dev tools
    - Check backend logs in Vercel dashboard
 
-### Debug Mode
+### **Build Issues**
+
+1. **Build fails with dependency error**
+   ```bash
+   # Clear cache and rebuild
+   eas build --platform android --profile preview --clear-cache
+   ```
+
+2. **APK not installing on device**
+   - Check if device allows unknown sources
+   - Verify APK is not corrupted (re-download)
+   - Try different device or emulator
+
+3. **AAB file not accepted by Play Store**
+   - Ensure using production profile: `eas build --platform android --profile production`
+   - Check app signing configuration
+   - Verify version code is incremented
+
+4. **Build takes too long**
+   - Check EAS build queue: https://expo.dev/accounts/[username]/projects/[project]/builds
+   - Consider upgrading EAS plan for faster builds
+   - Use `--clear-cache` if build seems stuck
+
+### **OTA Update Issues**
+
+1. **Update not showing in app**
+   - Check if update was published to correct branch/channel
+   - Verify app is not in development mode (`__DEV__ = false`)
+   - Check update status: `eas update:list`
+
+2. **Update fails to download**
+   - Check network connectivity
+   - Verify update was published successfully
+   - Try force refresh: `eas update --branch production --message "Force refresh"`
+
+3. **App crashes after update**
+   - Check update logs: `eas update:view [update-id]`
+   - Rollback to previous version: `eas update:rollback`
+   - Test update in preview channel first
+
+### **Development Issues**
+
+1. **App not connecting to localhost**
+   - Ensure backend is running on port 4000
+   - Check if using correct API configuration
+   - Verify no firewall blocking localhost
+
+2. **Hot reload not working**
+   - Restart development server: `npm start`
+   - Clear Metro cache: `npx expo start --clear`
+   - Check for syntax errors in code
+
+3. **Build profile not working**
+   - Verify `eas.json` configuration
+   - Check if profile exists: `eas build:configure`
+   - Use correct profile name in commands
+
+### **Debug Mode**
 
 Enable debug logging by setting environment variable:
 ```bash
+# For development
 EXPO_PUBLIC_DEBUG=true
+
+# For builds
+eas build --platform android --profile preview --env EXPO_PUBLIC_DEBUG=true
 ```
+
+### **Useful Commands**
+
+```bash
+# Check EAS status
+eas whoami
+
+# List all builds
+eas build:list
+
+# View build logs
+eas build:view [build-id]
+
+# List updates
+eas update:list
+
+# Check project configuration
+eas project:info
+
+# Clear all caches
+eas build --platform android --profile preview --clear-cache
+```
+
+## Quick Reference
+
+### **Most Common Commands**
+
+```bash
+# Local development
+npm start
+
+# Build APK for testing
+eas build --platform android --profile preview
+
+# Build AAB for Play Store
+eas build --platform android --profile production
+
+# Deploy OTA update
+eas update --branch production --message "Bug fix"
+
+# Check build status
+eas build:list
+
+# Check update status
+eas update:list
+```
+
+### **File Formats Explained**
+
+| Format | Use Case | Command | Install Method |
+|--------|----------|---------|----------------|
+| **APK** | Testing, Direct install | `--profile preview` | Direct installation |
+| **AAB** | Google Play Store | `--profile production` | Play Store only |
+| **OTA** | Code updates | `eas update` | Automatic in app |
+
+### **Build Profiles Summary**
+
+| Profile | Output | Use Case | Command |
+|---------|--------|----------|---------|
+| `development` | Dev build | Development | `--profile development` |
+| `preview` | APK | Testing | `--profile preview` |
+| `production` | AAB | App Store | `--profile production` |
+
+### **Update Channels**
+
+| Channel | Purpose | Command |
+|---------|---------|---------|
+| `preview` | Testing updates | `--branch preview` |
+| `production` | User updates | `--branch production` |
 
 ## Target Users
 

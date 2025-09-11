@@ -7,6 +7,7 @@ interface AuthContextType {
   login: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  validateEmail: (email: string) => { isValid: boolean; error?: string };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,7 +33,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const validateEmail = (email: string) => {
+    if (!email) {
+      return { isValid: false, error: 'Email is required' };
+    }
+    
+    if (!email.endsWith('@fairbanc.app')) {
+      return { 
+        isValid: false, 
+        error: 'Email must be from @fairbanc.app domain' 
+      };
+    }
+    
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { isValid: false, error: 'Invalid email format' };
+    }
+    
+    return { isValid: true };
+  };
+
   const login = async (email: string) => {
+    const validation = validateEmail(email);
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    
     try {
       await AsyncStorage.setItem('user_email', email);
       setEmail(email);
@@ -57,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     loading,
+    validateEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

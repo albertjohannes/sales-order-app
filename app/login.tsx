@@ -9,7 +9,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator
 } from 'react-native';
 
 export default function LoginScreen() {
@@ -17,11 +18,20 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [emailError, setEmailError] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+  const { login, validateEmail } = useAuth();
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    setEmailError('');
+    
+    // Real-time validation
+    if (text && !text.endsWith('@fairbanc.app')) {
+      setEmailError('Email must be from @fairbanc.app domain');
+    } else if (text && !validateEmail(text).isValid) {
+      setEmailError(validateEmail(text).error || 'Invalid email format');
+    }
   };
 
   const handleLogin = async () => {
@@ -30,8 +40,9 @@ export default function LoginScreen() {
       return;
     }
 
-    if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    const validation = validateEmail(email);
+    if (!validation.isValid) {
+      setEmailError(validation.error || 'Invalid email');
       return;
     }
 
@@ -40,7 +51,7 @@ export default function LoginScreen() {
       await login(email.trim());
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Error', 'Failed to login. Please try again.');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to login. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,15 +70,20 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>Welcome back!</Text>
         
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, emailError && styles.inputError]}
+              placeholder="Email (@fairbanc.app)"
+              value={email}
+              onChangeText={handleEmailChange}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
+          </View>
           
           <View style={styles.passwordContainer}>
             <TextInput
@@ -85,14 +101,28 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
           
+          <View style={styles.rememberMeContainer}>
+            <TouchableOpacity 
+              style={styles.checkboxContainer}
+              onPress={() => setRememberMe(!rememberMe)}
+            >
+              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.rememberMeText}>Remember me</Text>
+            </TouchableOpacity>
+          </View>
+          
           <TouchableOpacity 
             style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
             onPress={handleLogin}
-            disabled={loading}
+            disabled={loading || !!emailError}
           >
-            <Text style={styles.loginButtonText}>
-              {loading ? 'Logging in...' : 'Login'}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -130,6 +160,9 @@ const styles = StyleSheet.create({
   form: {
     gap: 16,
   },
+  inputContainer: {
+    gap: 4,
+  },
   input: {
     backgroundColor: 'white',
     paddingHorizontal: 16,
@@ -138,6 +171,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: '#ff4444',
+    backgroundColor: '#fff5f5',
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginLeft: 4,
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -160,11 +202,44 @@ const styles = StyleSheet.create({
   eyeIcon: {
     fontSize: 20,
   },
+  rememberMeContainer: {
+    marginVertical: 8,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  checkboxChecked: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  checkmark: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  rememberMeText: {
+    fontSize: 14,
+    color: '#666',
+  },
   loginButton: {
     backgroundColor: '#007AFF',
     paddingVertical: 16,
     borderRadius: 8,
     marginTop: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loginButtonText: {
     color: 'white',

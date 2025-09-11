@@ -49,7 +49,7 @@ class ApiService {
       return this.handleResponse(response);
     } catch (error) {
       clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timeout. Please check your connection and try again.');
       }
       throw error;
@@ -86,7 +86,7 @@ class ApiService {
       return this.handleResponse(response);
     } catch (error) {
       clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timeout. Please check your connection and try again.');
       }
       throw error;

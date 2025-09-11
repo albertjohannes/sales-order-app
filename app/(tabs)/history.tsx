@@ -10,13 +10,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 type TabType = 'orders' | 'collections' | 'onboard';
@@ -69,11 +69,48 @@ function HistoryTabScreenContent() {
             api.getCollections(),
             api.getOnboarding()
           ]);
-          
-          console.log('Backend data loaded:', { backendCollections, backendOnboarding });
-          // You could merge backend data with local data here if needed
+
+          // Map collections API data to PaymentCollection shape if available
+          if (backendCollections?.data && Array.isArray(backendCollections.data)) {
+            const mappedCollections: PaymentCollection[] = backendCollections.data.map((r: any) => ({
+              id: r.id || r.collectionId || `COL-${r.created_at || Date.now()}`,
+              outletId: r.outletId || r.outlet_id || '',
+              outletName: r.outletName || r.outlet_name || r.outletId || '-',
+              invoiceId: r.invoiceId || r.invoice_id || r.id || '-',
+              authorizationCode: r.authorizationCode || r.authorization_code || '-',
+              invoiceAmount: r.amount || r.invoiceAmount || 0,
+              collectionDate: r.createdAt || r.created_at || new Date().toISOString(),
+              status: (r.status as any) || 'completed',
+              // extra display fields not in PaymentCollection type
+              ...(r.method ? { method: r.method } : {}),
+              ...(r.note || r.notes ? { notes: r.note || r.notes } : {}),
+            }));
+            setPaymentCollections(mappedCollections);
+          }
+
+          // Map onboarding API data to Outlet shape if available
+          if (backendOnboarding?.data && Array.isArray(backendOnboarding.data)) {
+            const mappedOutlets = backendOnboarding.data.map((r: any) => ({
+              id: r.id || r.outletId || `OUTLET-${r.created_at || Date.now()}`,
+              name: r.name || '',
+              streetAddress: r.streetAddress || r.street_address || '',
+              province: r.province || null,
+              regency: r.regency || null,
+              district: r.district || null,
+              village: r.village || null,
+              postalCode: r.postalCode || r.postal_code || '',
+              latitude: r.latitude || '',
+              longitude: r.longitude || '',
+              ktpPhoto: r.ktpPhoto || r.ktp_photo || '',
+              outsidePhotos: r.outsidePhotos || r.outside_photos || [],
+              insidePhotos: r.insidePhotos || r.inside_photos || [],
+              inventoryPhotos: r.inventoryPhotos || r.inventory_photos || [],
+              createdAt: r.createdAt || r.created_at || new Date().toISOString(),
+              updatedAt: r.updatedAt || r.updated_at || r.createdAt || new Date().toISOString(),
+            }));
+            setOnboardingRecords(mappedOutlets);
+          }
         } catch (apiError) {
-          console.log('Backend data not available:', apiError);
           // Don't show error to user, just log it
         }
       }
@@ -200,17 +237,19 @@ function HistoryTabScreenContent() {
       
       <View style={styles.collectionDetails}>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{t('outlet')}:</Text>
-          <Text style={styles.detailValue}>{item.outletName}</Text>
+          <Text style={styles.detailLabel}>{t('outletId')}:</Text>
+          <Text style={styles.detailValue}>{item.outletId}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{t('invoice')}:</Text>
-          <Text style={styles.detailValue}>{item.invoiceId}</Text>
+          <Text style={styles.detailLabel}>Method:</Text>
+          <Text style={styles.detailValue}>{(item as any).method || '-'}</Text>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{t('authCode')}:</Text>
-          <Text style={styles.detailValue} numberOfLines={1}>{item.authorizationCode}</Text>
-        </View>
+        {!!(item as any).notes && (
+          <View style={[styles.detailRow, { alignItems: 'flex-start' }]}>
+            <Text style={styles.detailLabel}>Note:</Text>
+            <Text style={[styles.detailValue, styles.multilineValue]}>{(item as any).notes}</Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -251,9 +290,11 @@ function HistoryTabScreenContent() {
           <Text style={styles.detailLabel}>{t('outletName')}:</Text>
           <Text style={styles.detailValue}>{item.name}</Text>
         </View>
-        <View style={styles.detailRow}>
+        <View style={[styles.detailRow, { alignItems: 'flex-start' }]}>
           <Text style={styles.detailLabel}>{t('outletAddress')}:</Text>
-          <Text style={styles.detailValue} numberOfLines={2}>{item.streetAddress}</Text>
+          <Text style={[styles.detailValue, styles.multilineValue]} numberOfLines={3}>
+            {item.streetAddress}
+          </Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>{t('outletCity')}:</Text>
@@ -624,6 +665,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '600',
+  },
+  overflowEllipsis: {
+    flex: 1,
+  },
+  multilineValue: {
+    flex: 1,
+    textAlign: 'right',
   },
   photoLegend: {
     marginTop: 4,

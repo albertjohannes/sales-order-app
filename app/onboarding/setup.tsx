@@ -159,13 +159,12 @@ function OnboardingScreenContent() {
           updatedAt: new Date().toISOString()
         };
 
-        // Save to local storage
-        await saveOutlet(outletData);
-
-        // Send to backend API
+        // Send to backend API first to get real backend id
+        let backendId: string | null = null;
         try {
           const result = await api.createOnboarding(outletData);
           console.log('Onboarding data sent to backend:', result);
+          backendId = (result?.data && (result.data as any).id) || null;
         } catch (error) {
           console.error('Error sending to backend:', error);
           // Show user-friendly error message
@@ -177,6 +176,9 @@ function OnboardingScreenContent() {
             ]
           );
         }
+
+        // Save to local storage
+        await saveOutlet({ ...outletData, id: backendId || outletData.id });
 
         // Show success message
         Alert.alert(

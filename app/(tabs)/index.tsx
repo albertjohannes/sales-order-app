@@ -6,11 +6,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');

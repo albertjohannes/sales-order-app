@@ -12,6 +12,8 @@ interface ApiResponse<T = any> {
 }
 
 class ApiService {
+  private logRequest(method: 'GET' | 'POST', url: string, email?: string) {}
+
   private getHeaders(email: string): HeadersInit {
     return {
       'Content-Type': 'application/json',
@@ -42,7 +44,9 @@ class ApiService {
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
     
     try {
-      const response = await fetch(`${API_BASE_URL}/health`, {
+      const url = `${API_BASE_URL}/health`;
+      this.logRequest('GET', url);
+      const response = await fetch(url, {
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -76,7 +80,9 @@ class ApiService {
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for larger data
     
     try {
-      const response = await fetch(`${API_BASE_URL}/onboarding`, {
+      const url = `${API_BASE_URL}/onboarding`;
+      this.logRequest('POST', url, email);
+      const response = await fetch(url, {
         method: 'POST',
         headers: this.getHeaders(email),
         body: JSON.stringify(data),
@@ -95,6 +101,7 @@ class ApiService {
 
   async getOnboarding(email: string, id?: string): Promise<ApiResponse<any[] | any>> {
     const url = id ? `${API_BASE_URL}/onboarding?id=${id}` : `${API_BASE_URL}/onboarding`;
+    this.logRequest('GET', url, email);
     const response = await fetch(url, {
       headers: this.getHeaders(email),
     });
@@ -109,7 +116,9 @@ class ApiService {
     note?: string | null;
     attachments?: string[];
   }): Promise<ApiResponse<{ id: string; createdAt: string }>> {
-    const response = await fetch(`${API_BASE_URL}/collection`, {
+    const url = `${API_BASE_URL}/collection`;
+    this.logRequest('POST', url, email);
+    const response = await fetch(url, {
       method: 'POST',
       headers: this.getHeaders(email),
       body: JSON.stringify(data),
@@ -127,7 +136,8 @@ class ApiService {
     if (params.toString()) {
       url += `?${params.toString()}`;
     }
-    
+
+    this.logRequest('GET', url, email);
     const response = await fetch(url, {
       headers: this.getHeaders(email),
     });

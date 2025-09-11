@@ -1187,7 +1187,26 @@ export const translations = {
     id: 'Gagal menyinkronkan data. Silakan coba lagi.',
     en: 'Failed to sync data. Please try again.'
   },
-  
+  outletId: {
+    id: 'ID Outlet',
+    en: 'Outlet ID'
+  },
+  invoiceId: {
+    id: 'ID Invoice',
+    en: 'Invoice ID'
+  },
+  method: {
+    id: 'Metode',
+    en: 'Method'
+  },
+  name: {
+    id: 'Nama',
+    en: 'Name'
+  },
+  note: {
+    id: 'Catatan',
+    en: 'Note'
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations; 

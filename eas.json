@@ -23,7 +23,6 @@
       "channel": "production"
     }
   },
-  "update": {},
   "submit": {
     "production": {}
   }

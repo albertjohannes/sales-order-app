@@ -9,6 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { UpdateChecker } from '@/components/UpdateChecker';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -23,11 +24,12 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <LanguageProvider>
-          <CartProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <Stack initialRouteName="login">
+      <UpdateChecker>
+        <AuthProvider>
+          <LanguageProvider>
+            <CartProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <Stack initialRouteName="login">
                 <Stack.Screen name="login" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -41,6 +43,7 @@ export default function RootLayout() {
           </CartProvider>
         </LanguageProvider>
       </AuthProvider>
+      </UpdateChecker>
     </GestureHandlerRootView>
   );
 }

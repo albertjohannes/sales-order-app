@@ -1,4 +1,6 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import { AuthGuard } from '@/components/AuthGuard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useApi } from '@/services/api';
@@ -11,7 +13,8 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator
 } from 'react-native';
 import BasicInfoStep from './BasicInfoStep';
 import LocationStep from './LocationStep';
@@ -34,7 +37,7 @@ interface OutletForm {
   inventoryPhotos: string[];
 }
 
-export default function OnboardingScreen() {
+function OnboardingScreenContent() {
   const { t } = useLanguage();
   const { email } = useAuth();
   const api = useApi();
@@ -188,7 +191,14 @@ export default function OnboardingScreen() {
           console.log('Onboarding data sent to backend:', result);
         } catch (error) {
           console.error('Error sending to backend:', error);
-          // Don't show error to user, just log it
+          // Show user-friendly error message
+          Alert.alert(
+            t('warning'),
+            t('failedToSyncData') + ' ' + (error instanceof Error ? error.message : 'Unknown error'),
+            [
+              { text: t('ok'), style: 'default' }
+            ]
+          );
         }
 
         // Show success message
@@ -491,4 +501,15 @@ const styles = StyleSheet.create({
     color: '#999',
   },
 
-}); 
+});
+
+// Main component with error boundary and auth guard
+export default function OnboardingScreen() {
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <OnboardingScreenContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+} 

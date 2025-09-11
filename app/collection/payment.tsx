@@ -1,6 +1,8 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import TermsModal from '@/components/TermsModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { AuthGuard } from '@/components/AuthGuard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection } from '@/data/mockData';
@@ -32,7 +34,7 @@ const QRScanner = ({ onScan }: { onScan: (data: string) => void }) => {
   );
 };
 
-export default function CollectionScreen() {
+function CollectionScreenContent() {
   const { t, tText } = useLanguage();
   const { email } = useAuth();
   const api = useApi();
@@ -847,4 +849,15 @@ const styles = StyleSheet.create({
     color: '#28a745',
     fontWeight: '600',
   },
-}); 
+});
+
+// Main component with error boundary and auth guard
+export default function CollectionScreen() {
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <CollectionScreenContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+} 

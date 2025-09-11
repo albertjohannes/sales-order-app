@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Platform } from 'react-native';
 import * as Updates from 'expo-updates';
+import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 
 interface UpdateCheckerProps {
   children: React.ReactNode;

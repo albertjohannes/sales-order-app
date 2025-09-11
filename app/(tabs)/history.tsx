@@ -1,4 +1,6 @@
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import { AuthGuard } from '@/components/AuthGuard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection, Transaction } from '@/data/mockData';
@@ -19,7 +21,7 @@ import {
 
 type TabType = 'orders' | 'collections' | 'onboard';
 
-export default function HistoryTabScreen() {
+function HistoryTabScreenContent() {
   const { t } = useLanguage();
   const { email } = useAuth();
   const api = useApi();
@@ -658,4 +660,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
   },
-}); 
+});
+
+// Main component with error boundary and auth guard
+export default function HistoryTabScreen() {
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <HistoryTabScreenContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+} 

@@ -106,26 +106,42 @@ export const apiService = new ApiService();
 
 // Hook for using API with current user's email
 export function useApi() {
-  const { email } = useAuth();
-  
-  if (!email) {
-    throw new Error('User must be authenticated to use API');
-  }
+  const { email, isAuthenticated } = useAuth();
   
   return {
     // Health check (no auth needed)
     checkHealth: () => apiService.checkHealth(),
     
-    // Onboarding
-    createOnboarding: (data: Parameters<typeof apiService.createOnboarding>[1]) => 
-      apiService.createOnboarding(email, data),
-    getOnboarding: (id?: string) => 
-      apiService.getOnboarding(email, id),
+    // Onboarding (requires auth)
+    createOnboarding: (data: Parameters<typeof apiService.createOnboarding>[1]) => {
+      if (!isAuthenticated || !email) {
+        throw new Error('User must be authenticated to create onboarding');
+      }
+      return apiService.createOnboarding(email, data);
+    },
+    getOnboarding: (id?: string) => {
+      if (!isAuthenticated || !email) {
+        throw new Error('User must be authenticated to get onboarding data');
+      }
+      return apiService.getOnboarding(email, id);
+    },
     
-    // Collections
-    createCollection: (data: Parameters<typeof apiService.createCollection>[1]) => 
-      apiService.createCollection(email, data),
-    getCollections: (id?: string, outletId?: string) => 
-      apiService.getCollections(email, id, outletId),
+    // Collections (requires auth)
+    createCollection: (data: Parameters<typeof apiService.createCollection>[1]) => {
+      if (!isAuthenticated || !email) {
+        throw new Error('User must be authenticated to create collection');
+      }
+      return apiService.createCollection(email, data);
+    },
+    getCollections: (id?: string, outletId?: string) => {
+      if (!isAuthenticated || !email) {
+        throw new Error('User must be authenticated to get collection data');
+      }
+      return apiService.getCollections(email, id, outletId);
+    },
+    
+    // Auth status
+    isAuthenticated,
+    email,
   };
 }

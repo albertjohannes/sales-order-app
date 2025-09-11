@@ -1,6 +1,6 @@
-import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { AuthGuard } from '@/components/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useApi } from '@/services/api';
@@ -13,8 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  ActivityIndicator
+  View
 } from 'react-native';
 import BasicInfoStep from './BasicInfoStep';
 import LocationStep from './LocationStep';
@@ -69,53 +68,31 @@ function OnboardingScreenContent() {
   }, []);
 
   const updateFormData = (field: keyof OutletForm, value: string | string[] | any | null) => {
-    console.log('updateFormData:', { field, value });
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      console.log('New form data:', newData);
-      return newData;
-    });
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const canProceedToNextStep = (): boolean => {
-    const result = (() => {
-      switch (currentStep) {
-        case 1: // Basic Info
-          return formData.name.trim() !== '' && 
-                 formData.streetAddress.trim() !== '' && 
-                 formData.province !== null && 
-                 formData.regency !== null && 
-                 formData.district !== null && 
-                 formData.village !== null && 
-                 formData.postalCode.trim() !== '';
-        case 2: // Location
-          return formData.latitude !== '' && formData.longitude !== '';
-        case 3: // Photos
-          const ktpValid = formData.ktpPhoto !== '';
-          const outsideValid = formData.outsidePhotos.filter(p => p).length >= 3;
-          const insideValid = formData.insidePhotos.filter(p => p).length >= 3;
-          const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 3;
-          
-          console.log('Photo validation:', {
-            currentStep,
-            ktpValid,
-            outsideValid,
-            insideValid,
-            inventoryValid,
-            ktpPhoto: formData.ktpPhoto,
-            outsidePhotos: formData.outsidePhotos,
-            insidePhotos: formData.insidePhotos,
-            inventoryPhotos: formData.inventoryPhotos
-          });
-          
-          return ktpValid && outsideValid && insideValid && inventoryValid;
-        default:
-          return true;
-      }
-    })();
-    
-    console.log('canProceedToNextStep:', { currentStep, result });
-    return result;
+    switch (currentStep) {
+      case 1: // Basic Info
+        return formData.name.trim() !== '' && 
+               formData.streetAddress.trim() !== '' && 
+               formData.province !== null && 
+               formData.regency !== null && 
+               formData.district !== null && 
+               formData.village !== null && 
+               formData.postalCode.trim() !== '';
+      case 2: // Location
+        return formData.latitude !== '' && formData.longitude !== '';
+      case 3: // Photos
+        const ktpValid = formData.ktpPhoto !== '';
+        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 3;
+        const insideValid = formData.insidePhotos.filter(p => p).length >= 3;
+        const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 3;
+        
+        return ktpValid && outsideValid && insideValid && inventoryValid;
+      default:
+        return true;
+    }
   };
 
   const handleNext = async () => {

@@ -20,19 +20,40 @@ class ApiService {
   }
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    try {
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      return data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message === 'Network request failed') {
+        throw new Error('Unable to connect to server. Please check your internet connection and try again.');
+      }
+      throw error;
     }
-    
-    return data;
   }
 
   // Health Check (no auth required)
   async checkHealth(): Promise<ApiResponse> {
-    const response = await fetch(`${API_BASE_URL}/health`);
-    return this.handleResponse(response);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      return this.handleResponse(response);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout. Please check your connection and try again.');
+      }
+      throw error;
+    }
   }
 
   // Onboarding APIs
@@ -51,12 +72,25 @@ class ApiService {
     insidePhotos?: string[];
     inventoryPhotos?: string[];
   }): Promise<ApiResponse<{ id: string; createdAt: string }>> {
-    const response = await fetch(`${API_BASE_URL}/onboarding`, {
-      method: 'POST',
-      headers: this.getHeaders(email),
-      body: JSON.stringify(data),
-    });
-    return this.handleResponse(response);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for larger data
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/onboarding`, {
+        method: 'POST',
+        headers: this.getHeaders(email),
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return this.handleResponse(response);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout. Please check your connection and try again.');
+      }
+      throw error;
+    }
   }
 
   async getOnboarding(email: string, id?: string): Promise<ApiResponse<any[] | any>> {

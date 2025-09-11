@@ -1,22 +1,22 @@
-import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { AuthGuard } from '@/components/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection, Transaction } from '@/data/mockData';
-import { getOutlets, getPaymentCollections, getTransactions } from '@/services/storage';
 import { useApi } from '@/services/api';
+import { getOutlets, getPaymentCollections, getTransactions } from '@/services/storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 type TabType = 'orders' | 'collections' | 'onboard';

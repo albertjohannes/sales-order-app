@@ -1,8 +1,8 @@
+import { AuthGuard } from '@/components/AuthGuard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import TermsModal from '@/components/TermsModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { AuthGuard } from '@/components/AuthGuard';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection } from '@/data/mockData';

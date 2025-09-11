@@ -1179,6 +1179,14 @@ export const translations = {
     id: 'Gagal menyimpan data outlet. Silakan coba lagi.',
     en: 'Failed to save outlet data. Please try again.'
   },
+  warning: {
+    id: 'Peringatan',
+    en: 'Warning'
+  },
+  failedToSyncData: {
+    id: 'Gagal menyinkronkan data. Silakan coba lagi.',
+    en: 'Failed to sync data. Please try again.'
+  },
   
 } as const;
 

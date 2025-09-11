@@ -1,6 +1,7 @@
 import BannerCarousel from '@/components/BannerCarousel';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -16,6 +17,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function Index() {
   const { t } = useLanguage();
+  const { email } = useAuth();
   const router = useRouter();
 
   // Banner images
@@ -75,7 +77,10 @@ export default function Index() {
     </TouchableOpacity>
   );
 
-    return (
+  // Derive a friendly name from email (text before @)
+  const displayName = email ? email.split('@')[0] : '';
+
+  return (
     <View style={styles.container}>
       <HeaderWithSettings title={t('welcome')} />
       
@@ -90,7 +95,7 @@ export default function Index() {
       
       <View style={styles.content}>
         <View style={styles.headerSection}>
-          <Text style={styles.welcomeText}>{t('salesApp')}</Text>
+          <Text style={styles.welcomeText}>{email ? `Hi, ${displayName}` : t('salesApp')}</Text>
           <Text style={styles.subtitle}>{t('chooseAction')}</Text>
         </View>
         

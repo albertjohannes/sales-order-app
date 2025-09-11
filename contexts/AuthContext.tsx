@@ -71,7 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      // Remove user email first
       await AsyncStorage.removeItem('user_email');
+
+      // Clear other app data persisted locally
+      try {
+        const { clearAllStoredData } = await import('@/services/storage');
+        await clearAllStoredData();
+      } catch (innerError) {
+        console.error('Error clearing stored app data on logout:', innerError);
+      }
+
       setEmail(null);
     } catch (error) {
       console.error('Error removing email:', error);

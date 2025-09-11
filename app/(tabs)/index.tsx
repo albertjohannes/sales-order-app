@@ -6,11 +6,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Dimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -84,8 +84,8 @@ export default function Index() {
     <View style={styles.container}>
       <HeaderWithSettings title={t('welcome')} />
       
-      {/* Background Pattern */}
-      <View style={styles.backgroundPattern}>
+      {/* Background Pattern (non-interactive) */}
+      <View style={styles.backgroundPattern} pointerEvents="none">
         <View style={styles.circle1} />
         <View style={styles.circle2} />
         <View style={styles.circle3} />

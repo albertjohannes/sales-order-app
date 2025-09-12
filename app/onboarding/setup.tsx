@@ -178,7 +178,7 @@ function OnboardingScreenContent() {
             timeoutPromise
           ]);
           console.log('Onboarding data sent to backend:', result);
-          backendId = (result?.data && (result.data as any).id) || null;
+          backendId = (result as any)?.data?.id || null;
           syncStatus = 'synced';
         } catch (error) {
           console.error('Error sending to backend:', error);
@@ -209,7 +209,7 @@ function OnboardingScreenContent() {
           [
             { 
               text: t('ok'), 
-              onPress: () => router.push('/(tabs)/')
+              onPress: () => router.push('/(tabs)')
             }
           ]
         );

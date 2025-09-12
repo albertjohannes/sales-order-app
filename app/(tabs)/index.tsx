@@ -3,14 +3,16 @@ import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useApi } from '@/services/api';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');

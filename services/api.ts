@@ -105,13 +105,19 @@ class ApiService {
     } catch (error) {
       clearTimeout(timeoutId);
       console.error(`[API] Error in createOnboarding:`, error);
+      console.error(`[API] Error type:`, typeof error);
+      console.error(`[API] Error name:`, error instanceof Error ? error.name : 'N/A');
+      console.error(`[API] Error message:`, error instanceof Error ? error.message : 'N/A');
+      console.error(`[API] Error stack:`, error instanceof Error ? error.stack : 'N/A');
+      
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timeout. Please check your connection and try again.');
       }
       if (error instanceof Error && error.message.includes('Network request failed')) {
         throw new Error('Network connection failed. Please check your internet connection and try again.');
       }
-      throw error;
+      // Pass through the original error with more details
+      throw new Error(`API Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

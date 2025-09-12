@@ -183,14 +183,17 @@ function OnboardingScreenContent() {
         } catch (error) {
           console.error('Error sending to backend:', error);
           syncStatus = 'failed';
-          // Show user-friendly error message
+          // Show detailed error message for debugging
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           Alert.alert(
-            t('warning'),
-            t('failedToSyncData') + ' ' + (error instanceof Error ? error.message : 'Unknown error'),
+            'Backend Error Details',
+            `Full Error: ${errorMessage}\n\nThis will help us debug the issue. Please copy this error message.`,
             [
-              { text: t('ok'), style: 'default' }
+              { text: 'OK', style: 'default' }
             ]
           );
+          // Don't continue to success message if there's an error
+          return;
         }
 
         // Save to local storage with sync status

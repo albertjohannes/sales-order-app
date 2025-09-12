@@ -194,11 +194,13 @@ function OnboardingScreenContent() {
         }
 
         // Save to local storage with sync status
+        console.log(`[ONBOARDING] Saving to local storage with sync status: ${syncStatus}`);
         await saveOutlet({ 
           ...outletData, 
           id: backendId || outletData.id,
           syncStatus 
         });
+        console.log(`[ONBOARDING] Successfully saved to local storage`);
 
         // Show success message and navigate to tabs
         Alert.alert(

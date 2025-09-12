@@ -58,6 +58,12 @@ function HistoryTabScreenContent() {
         getOutlets()
       ]);
       
+      console.log(`[HISTORY] Loaded from local storage:`, {
+        transactions: storedTransactions.length,
+        collections: storedCollections.length,
+        outlets: storedOutlets.length
+      });
+      
       setTransactions(storedTransactions);
       
       // Merge local and API data for collections
@@ -136,6 +142,11 @@ function HistoryTabScreenContent() {
           // Don't show error to user, just log it
         }
       }
+      
+      console.log(`[HISTORY] Final merged data:`, {
+        collections: mergedCollections.length,
+        outlets: mergedOutlets.length
+      });
       
       setPaymentCollections(mergedCollections);
       setOnboardingRecords(mergedOutlets);

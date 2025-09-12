@@ -131,7 +131,9 @@ export const clearPaymentCollections = async (): Promise<void> => {
 // Outlet Storage Functions
 export const saveOutlet = async (outlet: Outlet): Promise<void> => {
   try {
+    console.log(`[STORAGE] Saving outlet:`, { id: outlet.id, name: outlet.name, syncStatus: outlet.syncStatus });
     const existingOutlets = await getOutlets();
+    console.log(`[STORAGE] Existing outlets count: ${existingOutlets.length}`);
     
     // Check if outlet already exists (by id)
     const existingIndex = existingOutlets.findIndex(o => o.id === outlet.id);
@@ -139,14 +141,17 @@ export const saveOutlet = async (outlet: Outlet): Promise<void> => {
     let updatedOutlets: Outlet[];
     if (existingIndex !== -1) {
       // Update existing outlet
+      console.log(`[STORAGE] Updating existing outlet at index ${existingIndex}`);
       updatedOutlets = [...existingOutlets];
       updatedOutlets[existingIndex] = outlet;
     } else {
       // Add new outlet at the beginning
+      console.log(`[STORAGE] Adding new outlet to beginning of list`);
       updatedOutlets = [outlet, ...existingOutlets];
     }
     
     await AsyncStorage.setItem(OUTLETS_STORAGE_KEY, JSON.stringify(updatedOutlets));
+    console.log(`[STORAGE] Successfully saved outlet to AsyncStorage. Total outlets: ${updatedOutlets.length}`);
   } catch (error) {
     console.error('Error saving outlet:', error);
   }

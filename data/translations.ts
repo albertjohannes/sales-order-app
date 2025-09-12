@@ -9,6 +9,10 @@ export const translations = {
     id: 'Memuat...',
     en: 'Loading...'
   },
+  submitting: {
+    id: 'Mengirim...',
+    en: 'Submitting...'
+  },
   error: {
     id: 'Error',
     en: 'Error'

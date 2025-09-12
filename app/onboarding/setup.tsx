@@ -8,6 +8,7 @@ import { saveOutlet } from '@/services/storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -42,6 +43,7 @@ function OnboardingScreenContent() {
   const api = useApi();
   const router = useRouter();
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<OutletForm>({
     name: '',
     streetAddress: '',
@@ -126,6 +128,8 @@ function OnboardingScreenContent() {
       }
 
       // Form completed - save outlet data and show success
+      setIsSubmitting(true);
+      
       try {
         // Create outlet object from form data
         const outletData = {
@@ -163,8 +167,16 @@ function OnboardingScreenContent() {
         let backendId: string | null = null;
         let syncStatus: 'synced' | 'pending' | 'failed' = 'pending';
         
+        // Create a timeout promise for 60 seconds
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
+        });
+        
         try {
-          const result = await api.createOnboarding(outletData);
+          const result = await Promise.race([
+            api.createOnboarding(outletData),
+            timeoutPromise
+          ]);
           console.log('Onboarding data sent to backend:', result);
           backendId = (result?.data && (result.data as any).id) || null;
           syncStatus = 'synced';
@@ -188,14 +200,14 @@ function OnboardingScreenContent() {
           syncStatus 
         });
 
-        // Show success message
+        // Show success message and navigate to tabs
         Alert.alert(
           t('onboardingComplete'),
           t('onboardingCompleteMessage'),
           [
             { 
               text: t('ok'), 
-              onPress: () => router.back()
+              onPress: () => router.push('/(tabs)/')
             }
           ]
         );
@@ -208,6 +220,8 @@ function OnboardingScreenContent() {
             { text: t('ok'), style: 'cancel' }
           ]
         );
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -317,17 +331,26 @@ function OnboardingScreenContent() {
           style={[
             styles.nextButton,
             currentStep === totalSteps && styles.submitButton,
-            !canProceedToNextStep() && styles.nextButtonDisabled
+            (!canProceedToNextStep() || isSubmitting) && styles.nextButtonDisabled
           ]}
           onPress={handleNext}
-          disabled={!canProceedToNextStep()}
+          disabled={!canProceedToNextStep() || isSubmitting}
         >
-          <Text style={[
-            styles.nextButtonText,
-            !canProceedToNextStep() && styles.nextButtonTextDisabled
-          ]}>
-            {currentStep === totalSteps ? t('submitOutlet') : t('next')}
-          </Text>
+          {isSubmitting ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="white" />
+              <Text style={[styles.nextButtonText, { marginLeft: 8 }]}>
+                {t('submitting')}...
+              </Text>
+            </View>
+          ) : (
+            <Text style={[
+              styles.nextButtonText,
+              (!canProceedToNextStep() || isSubmitting) && styles.nextButtonTextDisabled
+            ]}>
+              {currentStep === totalSteps ? t('submitOutlet') : t('next')}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -487,7 +510,11 @@ const styles = StyleSheet.create({
   nextButtonTextDisabled: {
     color: '#999',
   },
-
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 // Main component with error boundary and auth guard

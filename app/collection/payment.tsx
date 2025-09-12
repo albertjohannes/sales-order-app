@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Modal,
@@ -51,6 +52,7 @@ function CollectionScreenContent() {
   const [approvalRequested, setApprovalRequested] = useState(false);
   const [lockedOutlet, setLockedOutlet] = useState<Outlet | null>(null);
   const [lockedAmount, setLockedAmount] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load stored outlets on component mount
   useEffect(() => {
@@ -187,6 +189,8 @@ function CollectionScreenContent() {
         { 
           text: t('confirm'), 
           onPress: async () => {
+            setIsSubmitting(true);
+            
             try {
               // Create payment collection record for local storage
               const paymentCollection: PaymentCollection = {
@@ -203,14 +207,23 @@ function CollectionScreenContent() {
               
               // Send to backend API first
               let syncStatus: 'synced' | 'pending' | 'failed' = 'pending';
+              
+              // Create a timeout promise for 60 seconds
+              const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
+              });
+              
               try {
-                const result = await api.createCollection({
-                  outletId: selectedOutlet.id,
-                  amount: amount,
-                  method: 'cash',
-                  note: `Payment collected for outlet ${selectedOutlet.name} - Amount: ${formatCurrency(amount)}`,
-                  attachments: [] // Add any receipt photos here if needed
-                });
+                const result = await Promise.race([
+                  api.createCollection({
+                    outletId: selectedOutlet.id,
+                    amount: amount,
+                    method: 'cash',
+                    note: `Payment collected for outlet ${selectedOutlet.name} - Amount: ${formatCurrency(amount)}`,
+                    attachments: [] // Add any receipt photos here if needed
+                  }),
+                  timeoutPromise
+                ]);
                 console.log('Collection data sent to backend:', result);
                 syncStatus = 'synced';
               } catch (apiError) {
@@ -227,6 +240,8 @@ function CollectionScreenContent() {
             } catch (error) {
               console.error('Error saving payment collection:', error);
               Alert.alert(t('error'), t('failedSavePayment'));
+            } finally {
+              setIsSubmitting(false);
             }
           }
         }
@@ -399,12 +414,25 @@ function CollectionScreenContent() {
         {selectedOutlet && cashAmount && validateCashAmount(cashAmount) && approvalRequested && authorizationCode && validateAuthCode(authorizationCode) && (
           <View style={styles.submitSection}>
             <TouchableOpacity 
-              style={styles.submitButton}
+              style={[
+                styles.submitButton,
+                isSubmitting && styles.submitButtonDisabled
+              ]}
               onPress={handleConfirmTransaction}
+              disabled={isSubmitting}
             >
-              <Text style={styles.submitButtonText}>
-                {t('submitPaymentCollection')}
-              </Text>
+              {isSubmitting ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="white" />
+                  <Text style={[styles.submitButtonText, { marginLeft: 8 }]}>
+                    {t('submitting')}...
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {t('submitPaymentCollection')}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -851,6 +879,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#28a745',
     fontWeight: '600',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

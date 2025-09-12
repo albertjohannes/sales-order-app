@@ -52,20 +52,10 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
   });
 
   const handlePhotoUpload = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    // For simulator testing, use test image directly
-    if (__DEV__ && Platform.OS === 'ios') {
-      useTestImage(type, index);
-    } else {
-      // On real device, go directly to camera
-      openCamera(type, index);
-    }
+    // Always use real camera capture
+    openCamera(type, index);
   };
 
-  const useTestImage = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    // Use a placeholder base64 image for testing
-    const testBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-    savePhoto(testBase64, type, index);
-  };
 
   const convertUriToBase64 = async (uri: string, type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
     try {

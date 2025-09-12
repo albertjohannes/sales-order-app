@@ -51,8 +51,28 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
   });
 
   const handlePhotoUpload = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    // Always use real camera capture
-    openCamera(type, index);
+    // For iOS simulator, use test images
+    if (__DEV__ && Platform.OS === 'ios') {
+      useTestImage(type, index);
+    } else {
+      // Use real camera capture
+      openCamera(type, index);
+    }
+  };
+
+  // Test image function for iOS simulator
+  const useTestImage = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
+    // Small test base64 images for simulator testing
+    const testImages = {
+      ktp: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      outside: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      inside: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      inventory: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+    };
+    
+    const base64String = testImages[type];
+    console.log(`[PHOTO] Using test image for ${type} (iOS simulator), base64 size: ${base64String.length} characters`);
+    savePhoto(base64String, type, index);
   };
 
 

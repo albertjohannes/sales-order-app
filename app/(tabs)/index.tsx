@@ -6,11 +6,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Dimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -19,6 +19,8 @@ export default function Index() {
   const { t } = useLanguage();
   const { email } = useAuth();
   const router = useRouter();
+  const api = useApi();
+  const [isTesting, setIsTesting] = useState(false);
 
   // Banner images
   const bannerImages = [
@@ -35,6 +37,30 @@ export default function Index() {
 
   const handleCollection = () => {
     router.push('/collection');
+  };
+
+  const testApiConnection = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Please login first');
+      return;
+    }
+
+    setIsTesting(true);
+    try {
+      console.log('[DEBUG] Testing API connection...');
+      const healthResult = await api.checkHealth();
+      console.log('[DEBUG] Health check result:', healthResult);
+      
+      Alert.alert(
+        'API Test Result', 
+        `Health check: ${healthResult.status}\nMessage: ${healthResult.message}\nTimestamp: ${healthResult.timestamp}`
+      );
+    } catch (error) {
+      console.error('[DEBUG] API test failed:', error);
+      Alert.alert('API Test Failed', `Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const ActionCard = ({ 
@@ -118,6 +144,21 @@ export default function Index() {
             gradient={['#f093fb', '#f5576c']}
           />
         </View>
+
+        {/* Debug Test Button - Only in development */}
+        {__DEV__ && (
+          <View style={styles.debugSection}>
+            <TouchableOpacity 
+              style={[styles.debugButton, isTesting && styles.debugButtonDisabled]} 
+              onPress={testApiConnection}
+              disabled={isTesting}
+            >
+              <Text style={styles.debugButtonText}>
+                {isTesting ? 'Testing API...' : 'Test API Connection'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Banner Carousel */}
         <View style={styles.bannerSection}>
@@ -298,5 +339,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  debugSection: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  debugButton: {
+    backgroundColor: '#ff6b6b',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  debugButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  debugButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
 }); 

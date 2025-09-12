@@ -167,6 +167,19 @@ function OnboardingScreenContent() {
         let backendId: string | null = null;
         let syncStatus: 'synced' | 'pending' | 'failed' = 'pending';
         
+        // Debug: Log the data being sent
+        console.log('[ONBOARDING] Data being sent to backend:', {
+          name: outletData.name,
+          streetAddress: outletData.streetAddress,
+          ktpPhotoLength: outletData.ktpPhoto?.length || 0,
+          outsidePhotosCount: outletData.outsidePhotos?.length || 0,
+          insidePhotosCount: outletData.insidePhotos?.length || 0,
+          inventoryPhotosCount: outletData.inventoryPhotos?.length || 0,
+          outsidePhotosFirstChar: outletData.outsidePhotos?.[0]?.substring(0, 50) || 'none',
+          insidePhotosFirstChar: outletData.insidePhotos?.[0]?.substring(0, 50) || 'none',
+          inventoryPhotosFirstChar: outletData.inventoryPhotos?.[0]?.substring(0, 50) || 'none'
+        });
+        
         // Create a timeout promise for 60 seconds
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);

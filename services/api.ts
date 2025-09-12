@@ -12,7 +12,9 @@ interface ApiResponse<T = any> {
 }
 
 class ApiService {
-  private logRequest(method: 'GET' | 'POST', url: string, email?: string) {}
+  private logRequest(method: 'GET' | 'POST', url: string, email?: string) {
+    console.log(`[API] ${method} ${url}${email ? ` (${email})` : ''}`);
+  }
 
   private getHeaders(email: string): HeadersInit {
     return {
@@ -46,13 +48,16 @@ class ApiService {
     try {
       const url = `${API_BASE_URL}/health`;
       this.logRequest('GET', url);
+      console.log(`[API] Health check URL: ${url}`);
       const response = await fetch(url, {
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+      console.log(`[API] Health check response: ${response.status} ${response.statusText}`);
       return this.handleResponse(response);
     } catch (error) {
       clearTimeout(timeoutId);
+      console.error(`[API] Health check error:`, error);
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timeout. Please check your connection and try again.');
       }
@@ -82,6 +87,11 @@ class ApiService {
     try {
       const url = `${API_BASE_URL}/onboarding`;
       this.logRequest('POST', url, email);
+      
+      // Log payload size for debugging
+      const payloadSize = JSON.stringify(data).length;
+      console.log(`[API] Payload size: ${payloadSize} characters (${(payloadSize / 1024).toFixed(2)} KB)`);
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: this.getHeaders(email),
@@ -89,11 +99,17 @@ class ApiService {
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
+      
+      console.log(`[API] Response status: ${response.status} ${response.statusText}`);
       return this.handleResponse(response);
     } catch (error) {
       clearTimeout(timeoutId);
+      console.error(`[API] Error in createOnboarding:`, error);
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timeout. Please check your connection and try again.');
+      }
+      if (error instanceof Error && error.message.includes('Network request failed')) {
+        throw new Error('Network connection failed. Please check your internet connection and try again.');
       }
       throw error;
     }

@@ -161,12 +161,16 @@ function OnboardingScreenContent() {
 
         // Send to backend API first to get real backend id
         let backendId: string | null = null;
+        let syncStatus: 'synced' | 'pending' | 'failed' = 'pending';
+        
         try {
           const result = await api.createOnboarding(outletData);
           console.log('Onboarding data sent to backend:', result);
           backendId = (result?.data && (result.data as any).id) || null;
+          syncStatus = 'synced';
         } catch (error) {
           console.error('Error sending to backend:', error);
+          syncStatus = 'failed';
           // Show user-friendly error message
           Alert.alert(
             t('warning'),
@@ -177,8 +181,12 @@ function OnboardingScreenContent() {
           );
         }
 
-        // Save to local storage
-        await saveOutlet({ ...outletData, id: backendId || outletData.id });
+        // Save to local storage with sync status
+        await saveOutlet({ 
+          ...outletData, 
+          id: backendId || outletData.id,
+          syncStatus 
+        });
 
         // Show success message
         Alert.alert(

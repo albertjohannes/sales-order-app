@@ -434,6 +434,7 @@ export interface Outlet {
   inventoryPhotos: string[];
   createdAt: string;
   updatedAt: string;
+  syncStatus?: 'synced' | 'pending' | 'failed';
 }
 
 export interface Invoice {
@@ -560,6 +561,7 @@ export interface PaymentCollection {
   collectionDate: string;
   status: 'completed' | 'pending' | 'failed';
   notes?: string;
+  syncStatus?: 'synced' | 'pending' | 'failed';
 }
 
 export const mockPaymentCollections: PaymentCollection[] = [

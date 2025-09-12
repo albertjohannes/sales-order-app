@@ -59,8 +59,10 @@ function HistoryTabScreenContent() {
       ]);
       
       setTransactions(storedTransactions);
-      setPaymentCollections(storedCollections);
-      setOnboardingRecords(storedOutlets);
+      
+      // Merge local and API data for collections
+      let mergedCollections = [...storedCollections];
+      let mergedOutlets = [...storedOutlets];
       
       // Also try to load from backend API (optional - don't fail if backend is down)
       if (email) {
@@ -72,7 +74,7 @@ function HistoryTabScreenContent() {
 
           // Map collections API data to PaymentCollection shape if available
           if (backendCollections?.data && Array.isArray(backendCollections.data)) {
-            const mappedCollections: PaymentCollection[] = backendCollections.data.map((r: any) => ({
+            const apiCollections: PaymentCollection[] = backendCollections.data.map((r: any) => ({
               id: r.id || r.collectionId || `COL-${r.created_at || Date.now()}`,
               outletId: r.outletId || r.outlet_id || '',
               outletName: r.outletName || r.outlet_name || r.outletId || '-',
@@ -81,16 +83,26 @@ function HistoryTabScreenContent() {
               invoiceAmount: r.amount || r.invoiceAmount || 0,
               collectionDate: r.createdAt || r.created_at || new Date().toISOString(),
               status: (r.status as any) || 'completed',
+              syncStatus: 'synced', // API data is always synced
               // extra display fields not in PaymentCollection type
               ...(r.method ? { method: r.method } : {}),
               ...(r.note || r.notes ? { notes: r.note || r.notes } : {}),
             }));
-            setPaymentCollections(mappedCollections);
+            
+            // Merge API and local collections, prioritizing API data
+            const localCollectionIds = new Set(storedCollections.map(c => c.id));
+            const apiCollectionIds = new Set(apiCollections.map(c => c.id));
+            
+            // Add local collections that aren't in API (unsynced)
+            const unsyncedLocal = storedCollections.filter(c => !apiCollectionIds.has(c.id));
+            
+            // Combine: API collections + unsynced local collections
+            mergedCollections = [...apiCollections, ...unsyncedLocal];
           }
 
           // Map onboarding API data to Outlet shape if available
           if (backendOnboarding?.data && Array.isArray(backendOnboarding.data)) {
-            const mappedOutlets = backendOnboarding.data.map((r: any) => ({
+            const apiOutlets = backendOnboarding.data.map((r: any) => ({
               id: r.id || r.outletId || `OUTLET-${r.created_at || Date.now()}`,
               name: r.name || '',
               streetAddress: r.streetAddress || r.street_address || '',
@@ -107,13 +119,26 @@ function HistoryTabScreenContent() {
               inventoryPhotos: r.inventoryPhotos || r.inventory_photos || [],
               createdAt: r.createdAt || r.created_at || new Date().toISOString(),
               updatedAt: r.updatedAt || r.updated_at || r.createdAt || new Date().toISOString(),
+              syncStatus: 'synced' as const, // API data is always synced
             }));
-            setOnboardingRecords(mappedOutlets);
+            
+            // Merge API and local outlets, prioritizing API data
+            const localOutletIds = new Set(storedOutlets.map(o => o.id));
+            const apiOutletIds = new Set(apiOutlets.map(o => o.id));
+            
+            // Add local outlets that aren't in API (unsynced)
+            const unsyncedLocal = storedOutlets.filter(o => !apiOutletIds.has(o.id));
+            
+            // Combine: API outlets + unsynced local outlets
+            mergedOutlets = [...apiOutlets, ...unsyncedLocal];
           }
         } catch (apiError) {
           // Don't show error to user, just log it
         }
       }
+      
+      setPaymentCollections(mergedCollections);
+      setOnboardingRecords(mergedOutlets);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -218,15 +243,31 @@ function HistoryTabScreenContent() {
           <Text style={styles.transactionId} numberOfLines={1}>
             {item.id}
           </Text>
-          <View style={[
-            styles.statusBadge,
-            item.status === 'completed' && styles.statusCompleted,
-            item.status === 'pending' && styles.statusPending,
-            item.status === 'failed' && styles.statusFailed
-          ]}>
-            <Text style={styles.statusText}>
-              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-            </Text>
+          <View style={styles.statusRow}>
+            <View style={[
+              styles.statusBadge,
+              item.status === 'completed' && styles.statusCompleted,
+              item.status === 'pending' && styles.statusPending,
+              item.status === 'failed' && styles.statusFailed
+            ]}>
+              <Text style={styles.statusText}>
+                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+              </Text>
+            </View>
+            {/* Sync Status Indicator */}
+            {item.syncStatus && (
+              <View style={[
+                styles.syncBadge,
+                item.syncStatus === 'synced' && styles.syncSynced,
+                item.syncStatus === 'pending' && styles.syncPending,
+                item.syncStatus === 'failed' && styles.syncFailed
+              ]}>
+                <Text style={styles.syncText}>
+                  {item.syncStatus === 'synced' ? '☁️' : 
+                   item.syncStatus === 'pending' ? '⏳' : '❌'}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -269,13 +310,29 @@ function HistoryTabScreenContent() {
           <Text style={styles.transactionId} numberOfLines={1}>
             {item.id}
           </Text>
-          <View style={[
-            styles.statusBadge,
-            styles.statusCompleted
-          ]}>
-            <Text style={styles.statusText}>
-              {t('completed')}
-            </Text>
+          <View style={styles.statusRow}>
+            <View style={[
+              styles.statusBadge,
+              styles.statusCompleted
+            ]}>
+              <Text style={styles.statusText}>
+                {t('completed')}
+              </Text>
+            </View>
+            {/* Sync Status Indicator */}
+            {item.syncStatus && (
+              <View style={[
+                styles.syncBadge,
+                item.syncStatus === 'synced' && styles.syncSynced,
+                item.syncStatus === 'pending' && styles.syncPending,
+                item.syncStatus === 'failed' && styles.syncFailed
+              ]}>
+                <Text style={styles.syncText}>
+                  {item.syncStatus === 'synced' ? '☁️' : 
+                   item.syncStatus === 'pending' ? '⏳' : '❌'}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
         <View style={styles.photoSummary}>
@@ -643,6 +700,31 @@ const styles = StyleSheet.create({
   statusText: {
     color: 'white',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  syncBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  syncSynced: {
+    backgroundColor: '#4CAF50',
+  },
+  syncPending: {
+    backgroundColor: '#FF9800',
+  },
+  syncFailed: {
+    backgroundColor: '#F44336',
+  },
+  syncText: {
+    fontSize: 10,
     fontWeight: '600',
   },
   collectionDetails: {

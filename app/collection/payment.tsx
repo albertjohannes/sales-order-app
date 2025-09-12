@@ -201,10 +201,8 @@ function CollectionScreenContent() {
                 notes: `Payment collected for outlet ${selectedOutlet.name} - Amount: ${formatCurrency(amount)}`
               };
               
-              // Save to local storage
-              await savePaymentCollection(paymentCollection);
-              
-              // Send to backend API
+              // Send to backend API first
+              let syncStatus: 'synced' | 'pending' | 'failed' = 'pending';
               try {
                 const result = await api.createCollection({
                   outletId: selectedOutlet.id,
@@ -214,10 +212,15 @@ function CollectionScreenContent() {
                   attachments: [] // Add any receipt photos here if needed
                 });
                 console.log('Collection data sent to backend:', result);
+                syncStatus = 'synced';
               } catch (apiError) {
                 console.error('Error sending to backend:', apiError);
+                syncStatus = 'failed';
                 // Don't show error to user, just log it
               }
+              
+              // Save to local storage with sync status
+              await savePaymentCollection({ ...paymentCollection, syncStatus });
               
               // Navigate to success page with redirect to collections tab
               router.push('/shared/success?type=payment&redirect=collections');

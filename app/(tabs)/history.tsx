@@ -74,8 +74,8 @@ function HistoryTabScreenContent() {
       if (email) {
         try {
           const [backendCollections, backendOnboarding] = await Promise.all([
-            api.getCollections(email),
-            api.getOnboarding(email)
+            api.getCollections(),
+            api.getOnboarding()
           ]);
 
           // Map collections API data to PaymentCollection shape if available

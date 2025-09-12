@@ -87,9 +87,9 @@ function OnboardingScreenContent() {
         return formData.latitude !== '' && formData.longitude !== '';
       case 3: // Photos
         const ktpValid = formData.ktpPhoto !== '';
-        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 3;
-        const insideValid = formData.insidePhotos.filter(p => p).length >= 3;
-        const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 3;
+        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 2;
+        const insideValid = formData.insidePhotos.filter(p => p).length >= 2;
+        const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 2;
         
         return ktpValid && outsideValid && insideValid && inventoryValid;
       default:
@@ -115,8 +115,8 @@ function OnboardingScreenContent() {
       // Validate required fields before submission
       if (!formData.name.trim() || !formData.streetAddress.trim() || !formData.province || 
           !formData.regency || !formData.district || !formData.village || !formData.postalCode.trim() ||
-          !formData.ktpPhoto || formData.outsidePhotos.filter(p => p).length < 3 ||
-          formData.insidePhotos.filter(p => p).length < 3 || formData.inventoryPhotos.filter(p => p).length < 3) {
+          !formData.ktpPhoto || formData.outsidePhotos.filter(p => p).length < 2 ||
+          formData.insidePhotos.filter(p => p).length < 2 || formData.inventoryPhotos.filter(p => p).length < 2) {
         Alert.alert(
           t('error'),
           t('fillRequiredFieldsAndPhotos'),

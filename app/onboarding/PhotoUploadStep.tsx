@@ -200,7 +200,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Outside Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletOutsidePhotos')} *</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletOutsidePhotos')} * (2 required, 3rd optional)</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
@@ -239,7 +239,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Inside Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInsidePhotos')} *</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletInsidePhotos')} * (2 required, 3rd optional)</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
@@ -278,7 +278,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Inventory Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInventoryPhotos')} *</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletInventoryPhotos')} * (2 required, 3rd optional)</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>

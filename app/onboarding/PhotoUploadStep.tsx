@@ -5,7 +5,6 @@ import {
   Alert,
   Image,
   Modal,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -64,6 +63,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
+        console.log(`[PHOTO] Converted ${type} image from URI, base64 size: ${base64String.length} characters`);
         savePhoto(base64String, type, index);
       };
       reader.readAsDataURL(blob);
@@ -76,7 +76,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
   const openCamera = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
     const options = {
       mediaType: 'photo' as MediaType,
-      quality: 0.8 as any,
+      quality: 0.5 as any, // Reduced quality for smaller file size
       includeBase64: true,
     };
 
@@ -85,6 +85,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
         const asset = response.assets[0];
         if (asset.uri && asset.base64) {
           const base64String = `data:${asset.type};base64,${asset.base64}`;
+          console.log(`[PHOTO] Captured ${type} image, base64 size: ${base64String.length} characters`);
           savePhoto(base64String, type, index);
         } else if (asset.uri) {
           // Fallback: convert URI to base64

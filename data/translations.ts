@@ -1211,6 +1211,62 @@ export const translations = {
     id: 'Catatan',
     en: 'Note'
   },
+  
+  // OTA Update
+  updateAvailable: {
+    id: 'Update Tersedia',
+    en: 'Update Available'
+  },
+  updateAvailableMessage: {
+    id: 'Versi baru aplikasi tersedia. Apakah Anda ingin mengunduh dan menginstalnya sekarang?',
+    en: 'A new version of the app is available. Would you like to download and install it now?'
+  },
+  later: {
+    id: 'Nanti',
+    en: 'Later'
+  },
+  updateNow: {
+    id: 'Update Sekarang',
+    en: 'Update Now'
+  },
+  updateDownloaded: {
+    id: 'Update Terunduh',
+    en: 'Update Downloaded'
+  },
+  updateRestartMessage: {
+    id: 'Update berhasil diunduh. Aplikasi akan restart otomatis untuk menerapkan perubahan.',
+    en: 'Update has been downloaded successfully. The app will restart automatically to apply changes.'
+  },
+  restartNow: {
+    id: 'Restart Sekarang',
+    en: 'Restart Now'
+  },
+  updateFailed: {
+    id: 'Update Gagal',
+    en: 'Update Failed'
+  },
+  updateFailedMessage: {
+    id: 'Gagal mengunduh update. Silakan coba lagi nanti.',
+    en: 'Failed to download update. Please try again later.'
+  },
+  failedToProcessImage: {
+    id: 'Gagal memproses gambar',
+    en: 'Failed to process image'
+  },
+  
+  // Photo Upload
+  twoRequiredThirdOptional: {
+    id: '2 wajib, ke-3 opsional',
+    en: '2 required, 3rd optional'
+  },
+  photoOptional: {
+    id: 'Foto Opsional',
+    en: 'Photo Optional'
+  },
+  tapOutsideToClose: {
+    id: 'Ketuk di luar untuk menutup',
+    en: 'Tap outside to close'
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations; 

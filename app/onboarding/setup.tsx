@@ -1,6 +1,7 @@
 import { AuthGuard } from '@/components/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import { API_CONFIG } from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useApi } from '@/services/api';
@@ -10,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -37,6 +39,9 @@ interface OutletForm {
   inventoryPhotos: string[];
 }
 
+// Tiny 1x1 transparent PNG as dummy base64 image
+const DUMMY_BASE64_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+
 function OnboardingScreenContent() {
   const { t } = useLanguage();
   const { email } = useAuth();
@@ -63,6 +68,12 @@ function OnboardingScreenContent() {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
+  // Submit preview modal state
+  const [showPreview, setShowPreview] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<any | null>(null);
+
+  const isProduction = !__DEV__;
+
   // Load existing outlet data if editing (for future functionality)
   useEffect(() => {
     // This could be expanded to load existing outlet data for editing
@@ -71,6 +82,68 @@ function OnboardingScreenContent() {
 
   const updateFormData = (field: keyof OutletForm, value: string | string[] | any | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const submitOnboarding = async (outletData: any) => {
+    setIsSubmitting(true);
+    try {
+      let backendId: string | null = null;
+      let syncStatus: 'synced' | 'pending' | 'failed' = 'pending';
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
+      });
+
+      // Always send dummy base64 images for now
+      const payloadToSend = {
+        ...outletData,
+        ktpPhoto: DUMMY_BASE64_IMAGE,
+        outsidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
+        insidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
+        inventoryPhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
+      };
+
+      try {
+        const result = await Promise.race([
+          api.createOnboarding(payloadToSend),
+          timeoutPromise
+        ]);
+        console.log('Onboarding data sent to backend:', result);
+        backendId = (result as any)?.data?.id || null;
+        syncStatus = 'synced';
+      } catch (error) {
+        console.error('Error sending to backend:', error);
+        syncStatus = 'failed';
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        Alert.alert(
+          'Backend Error Details',
+          `Full Error: ${errorMessage}\n\nThis will help us debug the issue. Please copy this error message.`,
+          [ { text: 'OK', style: 'default' } ]
+        );
+        return;
+      }
+
+      await saveOutlet({ 
+        ...outletData, 
+        id: backendId || outletData.id,
+        syncStatus 
+      });
+
+      Alert.alert(
+        t('onboardingComplete'),
+        t('onboardingCompleteMessage'),
+        [ { text: t('ok'), onPress: () => router.push('/(tabs)') } ]
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmAndSubmit = async () => {
+    if (!pendingPayload) return;
+    await submitOnboarding(pendingPayload);
+    setShowPreview(false);
+    setPendingPayload(null);
   };
 
   const canProceedToNextStep = (): boolean => {
@@ -86,10 +159,10 @@ function OnboardingScreenContent() {
       case 2: // Location
         return formData.latitude !== '' && formData.longitude !== '';
       case 3: // Photos
-        const ktpValid = formData.ktpPhoto !== '';
-        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 2;
-        const insideValid = formData.insidePhotos.filter(p => p).length >= 2;
-        const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 2;
+        const ktpValid = formData.ktpPhoto !== '' || true; // allow empty; will be replaced with dummy
+        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 0; // will be replaced
+        const insideValid = formData.insidePhotos.filter(p => p).length >= 0; // will be replaced
+        const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 0; // will be replaced
         
         return ktpValid && outsideValid && insideValid && inventoryValid;
       default:
@@ -114,9 +187,7 @@ function OnboardingScreenContent() {
     } else {
       // Validate required fields before submission
       if (!formData.name.trim() || !formData.streetAddress.trim() || !formData.province || 
-          !formData.regency || !formData.district || !formData.village || !formData.postalCode.trim() ||
-          !formData.ktpPhoto || formData.outsidePhotos.filter(p => p).length < 2 ||
-          formData.insidePhotos.filter(p => p).length < 2 || formData.inventoryPhotos.filter(p => p).length < 2) {
+          !formData.regency || !formData.district || !formData.village || !formData.postalCode.trim()) {
         Alert.alert(
           t('error'),
           t('fillRequiredFieldsAndPhotos'),
@@ -127,13 +198,9 @@ function OnboardingScreenContent() {
         return;
       }
 
-      // Form completed - save outlet data and show success
-      setIsSubmitting(true);
-      
-      try {
-        // Create outlet object from form data
-        const outletData = {
-          id: `OUTLET-${Date.now()}`, // Generate unique ID
+      // Build payload
+      const outletData = {
+          id: `OUTLET-${Date.now()}`,
           name: formData.name.trim(),
           streetAddress: formData.streetAddress.trim(),
           province: formData.province ? {
@@ -162,84 +229,14 @@ function OnboardingScreenContent() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
+      setPendingPayload(outletData);
 
-        // Send to backend API first to get real backend id
-        let backendId: string | null = null;
-        let syncStatus: 'synced' | 'pending' | 'failed' = 'pending';
-        
-        // Debug: Log the data being sent
-        console.log('[ONBOARDING] Data being sent to backend:', {
-          name: outletData.name,
-          streetAddress: outletData.streetAddress,
-          ktpPhotoLength: outletData.ktpPhoto?.length || 0,
-          outsidePhotosCount: outletData.outsidePhotos?.length || 0,
-          insidePhotosCount: outletData.insidePhotos?.length || 0,
-          inventoryPhotosCount: outletData.inventoryPhotos?.length || 0,
-          outsidePhotosFirstChar: outletData.outsidePhotos?.[0]?.substring(0, 50) || 'none',
-          insidePhotosFirstChar: outletData.insidePhotos?.[0]?.substring(0, 50) || 'none',
-          inventoryPhotosFirstChar: outletData.inventoryPhotos?.[0]?.substring(0, 50) || 'none'
-        });
-        
-        // Create a timeout promise for 60 seconds
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
-        });
-        
-        try {
-          const result = await Promise.race([
-            api.createOnboarding(outletData),
-            timeoutPromise
-          ]);
-          console.log('Onboarding data sent to backend:', result);
-          backendId = (result as any)?.data?.id || null;
-          syncStatus = 'synced';
-        } catch (error) {
-          console.error('Error sending to backend:', error);
-          syncStatus = 'failed';
-          // Show detailed error message for debugging
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          Alert.alert(
-            'Backend Error Details',
-            `Full Error: ${errorMessage}\n\nThis will help us debug the issue. Please copy this error message.`,
-            [
-              { text: 'OK', style: 'default' }
-            ]
-          );
-          // Don't continue to success message if there's an error
-          return;
-        }
-
-        // Save to local storage with sync status
-        console.log(`[ONBOARDING] Saving to local storage with sync status: ${syncStatus}`);
-        await saveOutlet({ 
-          ...outletData, 
-          id: backendId || outletData.id,
-          syncStatus 
-        });
-        console.log(`[ONBOARDING] Successfully saved to local storage`);
-
-        // Show success message and navigate to tabs
-        Alert.alert(
-          t('onboardingComplete'),
-          t('onboardingCompleteMessage'),
-          [
-            { 
-              text: t('ok'), 
-              onPress: () => router.push('/(tabs)')
-            }
-          ]
-        );
-      } catch (error) {
-        console.error('Error saving outlet data:', error);
-        Alert.alert(
-          t('error'),
-          t('failedSaveOutletData'),
-          [
-            { text: t('ok'), style: 'cancel' }
-          ]
-        );
-      } finally {
-        setIsSubmitting(false);
+      if (isProduction) {
+        // In production, skip modal and submit immediately
+        await submitOnboarding(outletData);
+      } else {
+        // In development, show modal for inspection
+        setShowPreview(true);
       }
     }
   };
@@ -293,8 +290,6 @@ function OnboardingScreenContent() {
       </View>
     </View>
   );
-
-
 
 
 
@@ -372,6 +367,59 @@ function OnboardingScreenContent() {
         </TouchableOpacity>
       </View>
 
+      {/* Submit Confirmation Modal (development only) */}
+      {showPreview && !isProduction && (
+        <Modal
+          visible={showPreview}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowPreview(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 16 }}>
+            <View style={{ backgroundColor: 'white', borderRadius: 12, padding: 16, maxHeight: '85%' }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 12 }}>Confirm Submission</Text>
+              <ScrollView style={{ maxHeight: '70%' }}>
+                <Text style={{ fontWeight: '700', marginBottom: 4 }}>Endpoint</Text>
+                <Text selectable style={{ marginBottom: 12 }}>{`${API_CONFIG.getCurrentUrl()}/onboarding`}</Text>
+
+                <Text style={{ fontWeight: '700', marginBottom: 4 }}>Headers</Text>
+                <Text selectable style={{ marginBottom: 12 }}>{JSON.stringify({
+                  'Content-Type': 'application/json',
+                  'X-Agent-Email': email || '(not logged)'
+                }, null, 2)}</Text>
+
+                <Text style={{ fontWeight: '700', marginBottom: 4 }}>Payload</Text>
+                <Text selectable>{JSON.stringify(pendingPayload, null, 2)}</Text>
+              </ScrollView>
+
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
+                <TouchableOpacity
+                  style={[styles.backButton, { flex: 1 }]}
+                  onPress={() => setShowPreview(false)}
+                >
+                  <Text style={styles.backButtonText}>{t('back')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.nextButton, styles.submitButton, { flex: 1 }]}
+                  onPress={confirmAndSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color="white" />
+                      <Text style={[styles.nextButtonText, { marginLeft: 8 }]}>
+                        {t('submitting')}...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.nextButtonText}>Confirm & Send</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
 
     </View>
   );

@@ -21,6 +21,7 @@
         "foregroundImage": "./assets/images/sales_logo.png",
         "backgroundColor": "#ffffff"
       },
+      "icon": "./assets/images/sales_logo.png",
       "edgeToEdgeEnabled": true,
       "package": "com.albertandme.salesorderapp",
       "permissions": [
@@ -39,7 +40,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/sales_logo.png",
-          "imageWidth": 300,
+          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

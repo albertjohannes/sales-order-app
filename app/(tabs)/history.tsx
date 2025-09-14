@@ -8,7 +8,7 @@ import { useApi } from '@/services/api';
 import { getOutlets, getPaymentCollections, getTransactions } from '@/services/storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,11 +36,7 @@ function HistoryTabScreenContent() {
   const [onboardingRecords, setOnboardingRecords] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Reload data when screen comes into focus
+  // Reload data when screen comes into focus (includes initial load)
   useFocusEffect(
     useCallback(() => {
       loadData();
@@ -275,7 +271,7 @@ function HistoryTabScreenContent() {
               ]}>
                 <Text style={styles.syncText}>
                   {item.syncStatus === 'synced' ? '☁️' : 
-                   item.syncStatus === 'pending' ? '⏳' : '❌'}
+                   item.syncStatus === 'pending' ? '📱' : '❌'}
                 </Text>
               </View>
             )}
@@ -340,7 +336,7 @@ function HistoryTabScreenContent() {
               ]}>
                 <Text style={styles.syncText}>
                   {item.syncStatus === 'synced' ? '☁️' : 
-                   item.syncStatus === 'pending' ? '⏳' : '❌'}
+                   item.syncStatus === 'pending' ? '📱' : '❌'}
                 </Text>
               </View>
             )}

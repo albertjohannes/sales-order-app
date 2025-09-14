@@ -90,7 +90,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
       reader.readAsDataURL(blob);
     } catch (error) {
       console.error('Error converting URI to base64:', error);
-      Alert.alert(t('error'), 'Failed to process image');
+      Alert.alert(t('error'), t('failedToProcessImage'));
     }
   };
 
@@ -200,12 +200,15 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Outside Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletOutsidePhotos')} * (2 required, 3rd optional)</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletOutsidePhotos')} * ({t('twoRequiredThirdOptional')})</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
               <TouchableOpacity 
-                style={styles.photoGridItem}
+                style={[
+                  styles.photoGridItem,
+                  index === 2 && styles.optionalPhotoItem
+                ]}
                 onPress={() => formData.outsidePhotos[index] ? handlePhotoPreview(formData.outsidePhotos[index], 'outside', index) : handlePhotoUpload('outside', index)}
               >
                 {formData.outsidePhotos[index] ? (
@@ -217,8 +220,13 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
                   </View>
                 ) : (
                   <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                    <Text style={styles.photoUploadText}>{t('photo')} {index + 1}</Text>
+                    <IconSymbol name="camera.fill" size={24} color={index === 2 ? "#999" : "#007AFF"} />
+                    <Text style={[
+                      styles.photoUploadText,
+                      index === 2 && styles.optionalPhotoText
+                    ]}>
+                      {index === 2 ? t('photoOptional') : `${t('photo')} ${index + 1}`}
+                    </Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -239,12 +247,15 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Inside Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInsidePhotos')} * (2 required, 3rd optional)</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletInsidePhotos')} * ({t('twoRequiredThirdOptional')})</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
               <TouchableOpacity 
-                style={styles.photoGridItem}
+                style={[
+                  styles.photoGridItem,
+                  index === 2 && styles.optionalPhotoItem
+                ]}
                 onPress={() => formData.insidePhotos[index] ? handlePhotoPreview(formData.insidePhotos[index], 'inside', index) : handlePhotoUpload('inside', index)}
               >
                 {formData.insidePhotos[index] ? (
@@ -256,8 +267,13 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
                   </View>
                 ) : (
                   <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                    <Text style={styles.photoUploadText}>{t('photo')} {index + 1}</Text>
+                    <IconSymbol name="camera.fill" size={24} color={index === 2 ? "#999" : "#007AFF"} />
+                    <Text style={[
+                      styles.photoUploadText,
+                      index === 2 && styles.optionalPhotoText
+                    ]}>
+                      {index === 2 ? t('photoOptional') : `${t('photo')} ${index + 1}`}
+                    </Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -278,12 +294,15 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Inventory Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInventoryPhotos')} * (2 required, 3rd optional)</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletInventoryPhotos')} * ({t('twoRequiredThirdOptional')})</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
               <TouchableOpacity 
-                style={styles.photoGridItem}
+                style={[
+                  styles.photoGridItem,
+                  index === 2 && styles.optionalPhotoItem
+                ]}
                 onPress={() => formData.inventoryPhotos[index] ? handlePhotoPreview(formData.inventoryPhotos[index], 'inventory', index) : handlePhotoUpload('inventory', index)}
               >
                 {formData.inventoryPhotos[index] ? (
@@ -295,8 +314,13 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
                   </View>
                 ) : (
                   <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                    <Text style={styles.photoUploadText}>{t('photo')} {index + 1}</Text>
+                    <IconSymbol name="camera.fill" size={24} color={index === 2 ? "#999" : "#007AFF"} />
+                    <Text style={[
+                      styles.photoUploadText,
+                      index === 2 && styles.optionalPhotoText
+                    ]}>
+                      {index === 2 ? t('photoOptional') : `${t('photo')} ${index + 1}`}
+                    </Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -339,7 +363,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
                 <IconSymbol name="xmark" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalHint}>Tap outside to close</Text>
+            <Text style={styles.modalHint}>{t('tapOutsideToClose')}</Text>
             <View style={styles.previewImageContainer}>
               <Image source={{ uri: previewModal.uri }} style={styles.previewImage} />
             </View>
@@ -576,5 +600,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  optionalPhotoItem: {
+    borderWidth: 2,
+    borderColor: '#ccc',
+    backgroundColor: '#f9f9f9',
+    opacity: 0.7,
+  },
+  optionalPhotoText: {
+    color: '#999',
+    fontSize: 12,
+    fontStyle: 'italic',
   },
 });

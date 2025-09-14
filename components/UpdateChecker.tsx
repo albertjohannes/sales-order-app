@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import * as Updates from 'expo-updates';
 import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
@@ -7,6 +8,7 @@ interface UpdateCheckerProps {
 }
 
 export function UpdateChecker({ children }: UpdateCheckerProps) {
+  const { t } = useLanguage();
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
 
   useEffect(() => {
@@ -25,15 +27,15 @@ export function UpdateChecker({ children }: UpdateCheckerProps) {
       if (update.isAvailable) {
         setIsUpdateAvailable(true);
         Alert.alert(
-          'Update Available',
-          'A new version of the app is available. Would you like to download and install it now?',
+          t('updateAvailable'),
+          t('updateAvailableMessage'),
           [
             {
-              text: 'Later',
+              text: t('later'),
               style: 'cancel',
             },
             {
-              text: 'Update Now',
+              text: t('updateNow'),
               onPress: downloadAndInstallUpdate,
             },
           ]
@@ -47,10 +49,19 @@ export function UpdateChecker({ children }: UpdateCheckerProps) {
   const downloadAndInstallUpdate = async () => {
     try {
       await Updates.fetchUpdateAsync();
-      await Updates.reloadAsync();
+      Alert.alert(
+        t('updateDownloaded'),
+        t('updateRestartMessage'),
+        [
+          {
+            text: t('restartNow'),
+            onPress: () => Updates.reloadAsync(),
+          },
+        ]
+      );
     } catch (error) {
       console.log('Error downloading update:', error);
-      Alert.alert('Update Failed', 'Failed to download update. Please try again later.');
+      Alert.alert(t('updateFailed'), t('updateFailedMessage'));
     }
   };
 

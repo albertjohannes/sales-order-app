@@ -5,11 +5,11 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
+import { UpdateChecker } from '@/components/UpdateChecker';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { UpdateChecker } from '@/components/UpdateChecker';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -24,9 +24,9 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <UpdateChecker>
-        <AuthProvider>
-          <LanguageProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <UpdateChecker>
             <CartProvider>
               <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                 <Stack initialRouteName="login">
@@ -41,9 +41,9 @@ export default function RootLayout() {
               <StatusBar style="auto" />
             </ThemeProvider>
           </CartProvider>
+          </UpdateChecker>
         </LanguageProvider>
       </AuthProvider>
-      </UpdateChecker>
     </GestureHandlerRootView>
   );
 }

@@ -3,11 +3,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import * as Location from 'expo-location';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 
@@ -25,11 +25,17 @@ interface OutletForm {
   outsidePhotos: string[];
   insidePhotos: string[];
   inventoryPhotos: string[];
+  // Questionnaire fields
+  quizTopSellingItems: string[];
+  quizPrimaryDistributor: string;
+  quizReorderFrequency: string;
+  quizBusinessType: string;
+  quizYearsInBusiness: number | null;
 }
 
 interface LocationStepProps {
   formData: OutletForm;
-  updateFormData: (field: keyof OutletForm, value: string | string[] | any | null) => void;
+  updateFormData: (field: keyof OutletForm, value: string | string[] | number | any | null) => void;
 }
 
 export default function LocationStep({ formData, updateFormData }: LocationStepProps) {

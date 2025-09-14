@@ -1,9 +1,9 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import {
-    StyleSheet,
-    Text,
-    View
+  StyleSheet,
+  Text,
+  View
 } from 'react-native';
 
 interface OutletForm {
@@ -20,6 +20,12 @@ interface OutletForm {
   outsidePhotos: string[];
   insidePhotos: string[];
   inventoryPhotos: string[];
+  // Questionnaire fields
+  quizTopSellingItems: string[];
+  quizPrimaryDistributor: string;
+  quizReorderFrequency: string;
+  quizBusinessType: string;
+  quizYearsInBusiness: number | null;
 }
 
 interface ReviewStepProps {
@@ -103,6 +109,43 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           <Text style={styles.reviewLabel}>{t('outletInventoryPhotos')}:</Text>
           <Text style={styles.reviewValue}>
             {formData.inventoryPhotos.filter(p => p).length}/3 {t('uploaded')}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.reviewSection}>
+        <Text style={styles.reviewSectionTitle}>{t('businessInformation')}</Text>
+        <View style={styles.reviewItem}>
+          <Text style={styles.reviewLabel}>{t('topSellingItems')}:</Text>
+          <Text style={styles.reviewValue}>
+            {formData.quizTopSellingItems.filter(item => item.trim()).length > 0 
+              ? formData.quizTopSellingItems.filter(item => item.trim()).join(', ')
+              : t('notProvided')
+            }
+          </Text>
+        </View>
+        <View style={styles.reviewItem}>
+          <Text style={styles.reviewLabel}>{t('primaryDistributor')}:</Text>
+          <Text style={styles.reviewValue}>
+            {formData.quizPrimaryDistributor || t('notProvided')}
+          </Text>
+        </View>
+        <View style={styles.reviewItem}>
+          <Text style={styles.reviewLabel}>{t('businessType')}:</Text>
+          <Text style={styles.reviewValue}>
+            {formData.quizBusinessType || t('notProvided')}
+          </Text>
+        </View>
+        <View style={styles.reviewItem}>
+          <Text style={styles.reviewLabel}>{t('reorderFrequency')}:</Text>
+          <Text style={styles.reviewValue}>
+            {formData.quizReorderFrequency || t('notProvided')}
+          </Text>
+        </View>
+        <View style={styles.reviewItem}>
+          <Text style={styles.reviewLabel}>{t('yearsInBusiness')}:</Text>
+          <Text style={styles.reviewValue}>
+            {formData.quizYearsInBusiness ? `${formData.quizYearsInBusiness} ${t('years')}` : t('notProvided')}
           </Text>
         </View>
       </View>

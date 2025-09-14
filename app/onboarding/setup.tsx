@@ -21,6 +21,7 @@ import {
 import BasicInfoStep from './BasicInfoStep';
 import LocationStep from './LocationStep';
 import PhotoUploadStep from './PhotoUploadStep';
+import QuestionnaireStep from './QuestionnaireStep';
 import ReviewStep from './ReviewStep';
 
 interface OutletForm {
@@ -37,6 +38,12 @@ interface OutletForm {
   outsidePhotos: string[];
   insidePhotos: string[];
   inventoryPhotos: string[];
+  // Questionnaire fields
+  quizTopSellingItems: string[];
+  quizPrimaryDistributor: string;
+  quizReorderFrequency: string;
+  quizBusinessType: string;
+  quizYearsInBusiness: number | null;
 }
 
 // Tiny 1x1 transparent PNG as dummy base64 image
@@ -63,10 +70,16 @@ function OnboardingScreenContent() {
     outsidePhotos: [],
     insidePhotos: [],
     inventoryPhotos: [],
+    // Questionnaire fields
+    quizTopSellingItems: [''],
+    quizPrimaryDistributor: '',
+    quizReorderFrequency: '',
+    quizBusinessType: '',
+    quizYearsInBusiness: null,
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   // Submit preview modal state
   const [showPreview, setShowPreview] = useState(false);
@@ -80,7 +93,7 @@ function OnboardingScreenContent() {
     // For now, it's just a placeholder for future enhancement
   }, []);
 
-  const updateFormData = (field: keyof OutletForm, value: string | string[] | any | null) => {
+  const updateFormData = (field: keyof OutletForm, value: string | string[] | number | any | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -165,6 +178,9 @@ function OnboardingScreenContent() {
         const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 0; // will be replaced
         
         return ktpValid && outsideValid && insideValid && inventoryValid;
+      case 4: // Questionnaire
+        // At least one top selling item is required
+        return formData.quizTopSellingItems.some(item => item.trim() !== '');
       default:
         return true;
     }
@@ -226,6 +242,12 @@ function OnboardingScreenContent() {
           outsidePhotos: formData.outsidePhotos,
           insidePhotos: formData.insidePhotos,
           inventoryPhotos: formData.inventoryPhotos,
+          // Questionnaire fields
+          quizTopSellingItems: formData.quizTopSellingItems,
+          quizPrimaryDistributor: formData.quizPrimaryDistributor,
+          quizReorderFrequency: formData.quizReorderFrequency,
+          quizBusinessType: formData.quizBusinessType,
+          quizYearsInBusiness: formData.quizYearsInBusiness,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -276,7 +298,8 @@ function OnboardingScreenContent() {
               ]}>
                 {i === 0 ? t('basicInfo') : 
                  i === 1 ? t('location') : 
-                 i === 2 ? t('photos') : t('review')}
+                 i === 2 ? t('photos') : 
+                 i === 3 ? t('businessInfo') : t('review')}
               </Text>
             </View>
             {i < totalSteps - 1 && (
@@ -306,6 +329,8 @@ function OnboardingScreenContent() {
       case 3:
         return <PhotoUploadStep formData={formData} updateFormData={updateFormData} />;
       case 4:
+        return <QuestionnaireStep formData={formData} updateFormData={updateFormData} />;
+      case 5:
         return <ReviewStep formData={formData} />;
       default:
         return <BasicInfoStep formData={formData} updateFormData={updateFormData} />;

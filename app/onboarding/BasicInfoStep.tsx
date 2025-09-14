@@ -3,13 +3,13 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getDistricts, getProvinces, getRegencies, getVillages, type District, type Province, type Regency, type Village } from '@/data/indonesianRegions';
 import React, { useState } from 'react';
 import {
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 interface OutletForm {
@@ -26,11 +26,17 @@ interface OutletForm {
   outsidePhotos: string[];
   insidePhotos: string[];
   inventoryPhotos: string[];
+  // Questionnaire fields
+  quizTopSellingItems: string[];
+  quizPrimaryDistributor: string;
+  quizReorderFrequency: string;
+  quizBusinessType: string;
+  quizYearsInBusiness: number | null;
 }
 
 interface BasicInfoStepProps {
   formData: OutletForm;
-  updateFormData: (field: keyof OutletForm, value: string | string[] | Province | Regency | District | Village | null) => void;
+  updateFormData: (field: keyof OutletForm, value: string | string[] | number | Province | Regency | District | Village | null) => void;
 }
 
 export default function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) {

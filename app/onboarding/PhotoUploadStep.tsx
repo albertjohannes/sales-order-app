@@ -27,11 +27,17 @@ interface OutletForm {
   outsidePhotos: string[];
   insidePhotos: string[];
   inventoryPhotos: string[];
+  // Questionnaire fields
+  quizTopSellingItems: string[];
+  quizPrimaryDistributor: string;
+  quizReorderFrequency: string;
+  quizBusinessType: string;
+  quizYearsInBusiness: number | null;
 }
 
 interface PhotoUploadStepProps {
   formData: OutletForm;
-  updateFormData: (field: keyof OutletForm, value: string | string[] | any | null) => void;
+  updateFormData: (field: keyof OutletForm, value: string | string[] | number | any | null) => void;
 }
 
 export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploadStepProps) {

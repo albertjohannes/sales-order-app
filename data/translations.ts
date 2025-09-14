@@ -1267,6 +1267,74 @@ export const translations = {
     id: 'Ketuk di luar untuk menutup',
     en: 'Tap outside to close'
   },
+  businessType: {
+    id: 'Jenis Usaha',
+    en: 'Business Type'
+  },
+  reorderFrequency: {
+    id: 'Frekuensi Pemesanan',
+    en: 'Reorder Frequency'
+  },
+  yearsInBusiness: {
+    id: 'Tahun Berdiri',
+    en: 'Years in Business'
+  },
+  topSellingItems: {
+    id: 'Barang Terlaris',
+    en: 'Top Selling Items'
+  },
+  primaryDistributor: {
+    id: 'Distributor Utama',
+    en: 'Primary Distributor'
+  },
+  businessInformation: {
+    id: 'Informasi Usaha',
+    en: 'Business Information'
+  },
+  businessInformationDesc: {
+    id: 'Silakan isi informasi usaha Anda',
+    en: 'Please fill in your business information'
+  },
+  years: {
+    id: 'Tahun',
+    en: 'Years'
+  },
+  businessInfo: {
+    id: 'Informasi Usaha',
+    en: 'Business Information'
+  },
+  topSellingItemsDesc: {
+    id: 'Silakan isi barang terlaris Anda',
+    en: 'Please fill in your top selling items'
+  },
+  item: {
+    id: 'Barang',
+    en: 'Item'
+  },
+  addItem: {
+    id: 'Tambah Barang',
+    en: 'Add Item'
+  },
+  enterPrimaryDistributor: {
+    id: 'Masukkan distributor utama Anda',
+    en: 'Enter primary distributor'
+  },
+  enterReorderFrequency: {
+    id: 'Masukkan frekuensi pemesanan Anda',
+    en: 'Enter reorder frequency'
+  },
+  enterYearsInBusiness: {
+    id: 'Masukkan tahun berdiri Anda',
+    en: 'Enter years in business'
+  },
+  selectBusinessType: {
+    id: 'Pilih Jenis Usaha',
+    en: 'Select Business Type'
+  },
+  selectReorderFrequency: {
+    id: 'Pilih Frekuensi Pemesanan',
+    en: 'Select Reorder Frequency'
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations; 

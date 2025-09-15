@@ -23,10 +23,10 @@ interface OutletForm {
   postalCode: string;
   latitude: string;
   longitude: string;
-  ktpPhoto: string;
-  outsidePhotos: string[];
-  insidePhotos: string[];
-  inventoryPhotos: string[];
+  ktpPhoto: string; // File URI for upload
+  outsidePhotos: string[]; // File URIs for upload
+  insidePhotos: string[]; // File URIs for upload
+  inventoryPhotos: string[]; // File URIs for upload
   // Questionnaire fields
   quizTopSellingItems: string[];
   quizPrimaryDistributor: string;
@@ -69,54 +69,31 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
   // Test image function for iOS simulator
   const useTestImage = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    // Small test base64 images for simulator testing
-    const testImages = {
-      ktp: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-      outside: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-      inside: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-      inventory: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-    };
-    
-    const base64String = testImages[type];
-    console.log(`[PHOTO] Using test image for ${type} (iOS simulator), base64 size: ${base64String.length} characters`);
-    savePhoto(base64String, type, index);
+    // For testing, we'll use a placeholder file URI
+    // In a real app, you might want to use actual test images from assets
+    const testImageUri = `file:///test-${type}-${index || 0}.jpg`;
+    console.log(`[PHOTO] Using test image URI for ${type} (iOS simulator): ${testImageUri}`);
+    savePhoto(testImageUri, type, index);
   };
 
 
-  const convertUriToBase64 = async (uri: string, type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        console.log(`[PHOTO] Converted ${type} image from URI, base64 size: ${base64String.length} characters`);
-        savePhoto(base64String, type, index);
-      };
-      reader.readAsDataURL(blob);
-    } catch (error) {
-      console.error('Error converting URI to base64:', error);
-      Alert.alert(t('error'), t('failedToProcessImage'));
-    }
-  };
+  // No longer needed - we'll store file URIs directly
 
   const openCamera = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
     const options = {
       mediaType: 'photo' as MediaType,
-      quality: 0.5 as any, // Reduced quality for smaller file size
-      includeBase64: true,
+      quality: 0.8 as any, // Good quality for file upload
+      includeBase64: false, // We don't need base64 anymore
     };
 
     launchCamera(options, (response: ImagePickerResponse) => {
       if (response.assets && response.assets[0]) {
         const asset = response.assets[0];
-        if (asset.uri && asset.base64) {
-          const base64String = `data:${asset.type};base64,${asset.base64}`;
-          console.log(`[PHOTO] Captured ${type} image, base64 size: ${base64String.length} characters`);
-          savePhoto(base64String, type, index);
-        } else if (asset.uri) {
-          // Fallback: convert URI to base64
-          convertUriToBase64(asset.uri, type, index);
+        if (asset.uri) {
+          console.log(`[PHOTO] Captured ${type} image, file URI: ${asset.uri}`);
+          savePhoto(asset.uri, type, index);
+        } else {
+          Alert.alert(t('error'), 'No image captured');
         }
       } else if (response.errorMessage) {
         Alert.alert(t('error'), response.errorMessage);

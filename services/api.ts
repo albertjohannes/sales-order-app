@@ -16,11 +16,17 @@ class ApiService {
     console.log(`[API] ${method} ${url}${email ? ` (${email})` : ''}`);
   }
 
-  private getHeaders(email: string): HeadersInit {
-    return {
-      'Content-Type': 'application/json',
+  private getHeaders(email: string, isMultipart: boolean = false): HeadersInit {
+    const headers: HeadersInit = {
       'X-Agent-Email': email,
     };
+    
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
+    // For multipart, let the browser set the Content-Type with boundary
+    
+    return headers;
   }
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
@@ -121,6 +127,40 @@ class ApiService {
     }
   }
 
+  // New method for multipart file uploads
+  async createOnboardingWithFiles(email: string, formData: FormData): Promise<ApiResponse<{ id: string; photoUrls: any }>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for file uploads
+    
+    try {
+      const url = `${API_BASE_URL}/onboarding`;
+      this.logRequest('POST', url, email);
+      console.log(`[API] Uploading files with FormData`);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(email, true), // isMultipart = true
+        body: formData,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      
+      console.log(`[API] File upload response status: ${response.status} ${response.statusText}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error(`[API] Error in createOnboardingWithFiles:`, error);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('File upload timeout. Please check your connection and try again.');
+      }
+      if (error instanceof Error && error.message.includes('Network request failed')) {
+        throw new Error('Network connection failed. Please check your internet connection and try again.');
+      }
+      throw new Error(`File Upload Error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   async getOnboarding(email: string, id?: string): Promise<ApiResponse<any[] | any>> {
     const url = id ? `${API_BASE_URL}/onboarding?id=${id}` : `${API_BASE_URL}/onboarding`;
     this.logRequest('GET', url, email);
@@ -184,6 +224,12 @@ export function useApi() {
         throw new Error('User must be authenticated to create onboarding');
       }
       return apiService.createOnboarding(email, data);
+    },
+    createOnboardingWithFiles: (formData: FormData) => {
+      if (!isAuthenticated || !email) {
+        throw new Error('User must be authenticated to create onboarding with files');
+      }
+      return apiService.createOnboardingWithFiles(email, formData);
     },
     getOnboarding: (id?: string) => {
       if (!isAuthenticated || !email) {

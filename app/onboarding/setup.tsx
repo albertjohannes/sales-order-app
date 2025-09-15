@@ -34,10 +34,10 @@ interface OutletForm {
   postalCode: string;
   latitude: string;
   longitude: string;
-  ktpPhoto: string;
-  outsidePhotos: string[];
-  insidePhotos: string[];
-  inventoryPhotos: string[];
+  ktpPhoto: string; // File URI for upload
+  outsidePhotos: string[]; // File URIs for upload
+  insidePhotos: string[]; // File URIs for upload
+  inventoryPhotos: string[]; // File URIs for upload
   // Questionnaire fields
   quizTopSellingItems: string[];
   quizPrimaryDistributor: string;
@@ -46,8 +46,106 @@ interface OutletForm {
   quizYearsInBusiness: number | null;
 }
 
-// Tiny 1x1 transparent PNG as dummy base64 image
+// Tiny 1x1 transparent PNG as dummy base64 image for fallback
 const DUMMY_BASE64_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+
+// Helper function to convert form data to FormData for multipart upload
+const createFormData = (outletData: any): FormData => {
+  const formData = new FormData();
+  
+  // Add text fields
+  formData.append('name', outletData.name);
+  formData.append('streetAddress', outletData.streetAddress);
+  
+  // Add region data as JSON strings
+  if (outletData.province) {
+    formData.append('province', JSON.stringify({
+      id: outletData.province.code || outletData.province.id,
+      name: outletData.province.name
+    }));
+  }
+  if (outletData.regency) {
+    formData.append('regency', JSON.stringify({
+      id: outletData.regency.code || outletData.regency.id,
+      name: outletData.regency.name
+    }));
+  }
+  if (outletData.district) {
+    formData.append('district', JSON.stringify({
+      id: outletData.district.code || outletData.district.id,
+      name: outletData.district.name
+    }));
+  }
+  if (outletData.village) {
+    formData.append('village', JSON.stringify({
+      id: outletData.village.code || outletData.village.id,
+      name: outletData.village.name
+    }));
+  }
+  
+  formData.append('postalCode', outletData.postalCode || '');
+  formData.append('latitude', outletData.latitude || '');
+  formData.append('longitude', outletData.longitude || '');
+  
+  // Add questionnaire fields
+  if (outletData.quizTopSellingItems) {
+    formData.append('quizTopSellingItems', JSON.stringify(outletData.quizTopSellingItems));
+  }
+  formData.append('quizPrimaryDistributor', outletData.quizPrimaryDistributor || '');
+  formData.append('quizReorderFrequency', outletData.quizReorderFrequency || '');
+  formData.append('quizBusinessType', outletData.quizBusinessType || '');
+  formData.append('quizYearsInBusiness', outletData.quizYearsInBusiness?.toString() || '');
+  
+  // Add photo files
+  if (outletData.ktpPhoto) {
+    formData.append('ktpPhoto', {
+      uri: outletData.ktpPhoto,
+      type: 'image/jpeg',
+      name: 'ktp.jpg',
+    } as any);
+  }
+  
+  // Add outside photos
+  if (outletData.outsidePhotos && outletData.outsidePhotos.length > 0) {
+    outletData.outsidePhotos.forEach((photoUri: string, index: number) => {
+      if (photoUri) {
+        formData.append('outsidePhotos', {
+          uri: photoUri,
+          type: 'image/jpeg',
+          name: `outside_${index + 1}.jpg`,
+        } as any);
+      }
+    });
+  }
+  
+  // Add inside photos
+  if (outletData.insidePhotos && outletData.insidePhotos.length > 0) {
+    outletData.insidePhotos.forEach((photoUri: string, index: number) => {
+      if (photoUri) {
+        formData.append('insidePhotos', {
+          uri: photoUri,
+          type: 'image/jpeg',
+          name: `inside_${index + 1}.jpg`,
+        } as any);
+      }
+    });
+  }
+  
+  // Add inventory photos
+  if (outletData.inventoryPhotos && outletData.inventoryPhotos.length > 0) {
+    outletData.inventoryPhotos.forEach((photoUri: string, index: number) => {
+      if (photoUri) {
+        formData.append('inventoryPhotos', {
+          uri: photoUri,
+          type: 'image/jpeg',
+          name: `inventory_${index + 1}.jpg`,
+        } as any);
+      }
+    });
+  }
+  
+  return formData;
+};
 
 function OnboardingScreenContent() {
   const { t } = useLanguage();
@@ -107,20 +205,38 @@ function OnboardingScreenContent() {
         setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000);
       });
 
-      // Always send dummy base64 images for now
-      const payloadToSend = {
-        ...outletData,
-        ktpPhoto: DUMMY_BASE64_IMAGE,
-        outsidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
-        insidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
-        inventoryPhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
-      };
-
       try {
-        const result = await Promise.race([
-          api.createOnboarding(payloadToSend),
-          timeoutPromise
-        ]);
+        // Check if we have actual photo files to upload
+        const hasPhotos = outletData.ktpPhoto || 
+          (outletData.outsidePhotos && outletData.outsidePhotos.some((photo: string) => photo)) ||
+          (outletData.insidePhotos && outletData.insidePhotos.some((photo: string) => photo)) ||
+          (outletData.inventoryPhotos && outletData.inventoryPhotos.some((photo: string) => photo));
+
+        let result;
+        if (hasPhotos) {
+          // Use file upload for real photos
+          console.log('Uploading with file upload (FormData)');
+          const formData = createFormData(outletData);
+          result = await Promise.race([
+            api.createOnboardingWithFiles(formData),
+            timeoutPromise
+          ]);
+        } else {
+          // Fallback to JSON with dummy images for testing
+          console.log('Uploading with JSON (no photos)');
+          const payloadToSend = {
+            ...outletData,
+            ktpPhoto: DUMMY_BASE64_IMAGE,
+            outsidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
+            insidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
+            inventoryPhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
+          };
+          result = await Promise.race([
+            api.createOnboarding(payloadToSend),
+            timeoutPromise
+          ]);
+        }
+        
         console.log('Onboarding data sent to backend:', result);
         backendId = (result as any)?.data?.id || null;
         syncStatus = 'synced';
@@ -220,21 +336,21 @@ function OnboardingScreenContent() {
           name: formData.name.trim(),
           streetAddress: formData.streetAddress.trim(),
           province: formData.province ? {
-            code: formData.province.code,
+            id: formData.province.id || formData.province.code,
             name: formData.province.name
-          } : { code: '', name: '' },
+          } : { id: '', name: '' },
           regency: formData.regency ? {
-            code: formData.regency.code,
+            id: formData.regency.id || formData.regency.code,
             name: formData.regency.name
-          } : { code: '', name: '' },
+          } : { id: '', name: '' },
           district: formData.district ? {
-            code: formData.district.code,
+            id: formData.district.id || formData.district.code,
             name: formData.district.name
-          } : { code: '', name: '' },
+          } : { id: '', name: '' },
           village: formData.village ? {
-            code: formData.village.code,
+            id: formData.village.id || formData.village.code,
             name: formData.village.name
-          } : { code: '', name: '' },
+          } : { id: '', name: '' },
           postalCode: formData.postalCode.trim(),
           latitude: formData.latitude,
           longitude: formData.longitude,

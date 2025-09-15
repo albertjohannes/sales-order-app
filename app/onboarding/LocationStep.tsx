@@ -21,10 +21,10 @@ interface OutletForm {
   postalCode: string;
   latitude: string;
   longitude: string;
-  ktpPhoto: string;
-  outsidePhotos: string[];
-  insidePhotos: string[];
-  inventoryPhotos: string[];
+  ktpPhoto: string; // File URI for upload
+  outsidePhotos: string[]; // File URIs for upload
+  insidePhotos: string[]; // File URIs for upload
+  inventoryPhotos: string[]; // File URIs for upload
   // Questionnaire fields
   quizTopSellingItems: string[];
   quizPrimaryDistributor: string;

@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { ImagePickerResponse, launchCamera, MediaType } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 interface OutletForm {
   name: string;
@@ -79,28 +79,35 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
   // No longer needed - we'll store file URIs directly
 
-  const openCamera = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    const options = {
-      mediaType: 'photo' as MediaType,
-      quality: 0.8 as any, // Good quality for file upload
-      includeBase64: false, // We don't need base64 anymore
-    };
+  const openCamera = async (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('error'), 'Camera permission is required to take photos.');
+      return;
+    }
 
-    launchCamera(options, (response: ImagePickerResponse) => {
-      if (response.assets && response.assets[0]) {
-        const asset = response.assets[0];
-        if (asset.uri) {
-          console.log(`[PHOTO] Captured ${type} image, file URI: ${asset.uri}`);
-          savePhoto(asset.uri, type, index);
-        } else {
-          Alert.alert(t('error'), 'No image captured');
-        }
-      } else if (response.errorMessage) {
-        Alert.alert(t('error'), response.errorMessage);
-      }
-      // Always close any open modals after camera interaction
-      setPreviewModal({ visible: false, uri: '', type: '', index: undefined });
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+      allowsEditing: false,
+      exif: false,
+      base64: false,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
     });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      if (asset.uri) {
+        console.log(`[PHOTO] Captured ${type} image, file URI: ${asset.uri}`);
+        savePhoto(asset.uri, type, index);
+      }
+    } else if (result.canceled) {
+      // user canceled
+    } else {
+      Alert.alert(t('error'), 'No image captured');
+    }
+
+    // Always close any open modals after camera interaction
+    setPreviewModal({ visible: false, uri: '', type: '', index: undefined });
   };
 
   const savePhoto = (uri: string, type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {

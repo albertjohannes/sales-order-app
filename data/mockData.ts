@@ -432,6 +432,12 @@ export interface Outlet {
   outsidePhotos: string[];
   insidePhotos: string[];
   inventoryPhotos: string[];
+  // Questionnaire fields
+  quizTopSellingItems?: string[];
+  quizPrimaryDistributor?: string;
+  quizReorderFrequency?: string;
+  quizBusinessType?: string;
+  quizYearsInBusiness?: number | null;
   createdAt: string;
   updatedAt: string;
   syncStatus?: 'synced' | 'pending' | 'failed';

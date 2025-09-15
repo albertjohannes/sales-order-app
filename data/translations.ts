@@ -1303,6 +1303,14 @@ export const translations = {
     id: 'Informasi Usaha',
     en: 'Business Information'
   },
+  basicInfoShort: {
+    id: 'Dasar',
+    en: 'Basic'
+  },
+  businessInfoShort: {
+    id: 'Usaha',
+    en: 'Business'
+  },
   topSellingItemsDesc: {
     id: 'Silakan isi barang terlaris Anda',
     en: 'Please fill in your top selling items'

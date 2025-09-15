@@ -191,17 +191,6 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
             </View>
           )}
         </TouchableOpacity>
-        
-        {/* Add camera button for KTP even when photo exists */}
-        {formData.ktpPhoto && (
-          <TouchableOpacity 
-            style={styles.addPhotoButton}
-            onPress={() => handlePhotoUpload('ktp')}
-          >
-            <IconSymbol name="camera.fill" size={16} color="#007AFF" />
-            <Text style={styles.addPhotoButtonText}>{t('takeAnotherPhoto')}</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Outside Photos */}
@@ -481,23 +470,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     aspectRatio: 1,
-  },
-  addPhotoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-  },
-  addPhotoButtonText: {
-    color: '#007AFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
   },
   gridCameraButton: {
     position: 'absolute',

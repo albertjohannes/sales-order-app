@@ -119,6 +119,12 @@ function HistoryTabScreenContent() {
               outsidePhotos: r.outsidePhotos || r.outside_photos || [],
               insidePhotos: r.insidePhotos || r.inside_photos || [],
               inventoryPhotos: r.inventoryPhotos || r.inventory_photos || [],
+              // Questionnaire fields
+              quizTopSellingItems: r.quizTopSellingItems || r.quiz_top_selling_items || [],
+              quizPrimaryDistributor: r.quizPrimaryDistributor || r.quiz_primary_distributor || '',
+              quizReorderFrequency: r.quizReorderFrequency || r.quiz_reorder_frequency || '',
+              quizBusinessType: r.quizBusinessType || r.quiz_business_type || '',
+              quizYearsInBusiness: r.quizYearsInBusiness || r.quiz_years_in_business || null,
               createdAt: r.createdAt || r.created_at || new Date().toISOString(),
               updatedAt: r.updatedAt || r.updated_at || r.createdAt || new Date().toISOString(),
               syncStatus: 'synced' as const, // API data is always synced
@@ -156,6 +162,40 @@ function HistoryTabScreenContent() {
 
 
   const handleOnboardingRecordTap = (outlet: Outlet) => {
+    // Build questionnaire section
+    const questionnaireInfo = [];
+    
+    // Top selling items
+    if (outlet.quizTopSellingItems && outlet.quizTopSellingItems.length > 0) {
+      const validItems = outlet.quizTopSellingItems.filter(item => item.trim());
+      if (validItems.length > 0) {
+        questionnaireInfo.push(`${t('topSellingItems')}: ${validItems.join(', ')}`);
+      }
+    }
+    
+    // Primary distributor
+    if (outlet.quizPrimaryDistributor) {
+      questionnaireInfo.push(`${t('primaryDistributor')}: ${outlet.quizPrimaryDistributor}`);
+    }
+    
+    // Business type
+    if (outlet.quizBusinessType) {
+      questionnaireInfo.push(`${t('businessType')}: ${outlet.quizBusinessType}`);
+    }
+    
+    // Reorder frequency
+    if (outlet.quizReorderFrequency) {
+      questionnaireInfo.push(`${t('reorderFrequency')}: ${outlet.quizReorderFrequency}`);
+    }
+    
+    // Years in business
+    if (outlet.quizYearsInBusiness !== null && outlet.quizYearsInBusiness !== undefined) {
+      questionnaireInfo.push(`${t('yearsInBusiness')}: ${outlet.quizYearsInBusiness} ${t('years')}`);
+    }
+    
+    const questionnaireText = questionnaireInfo.length > 0 ? 
+      `\n\n${t('businessInformation')}:\n${questionnaireInfo.join('\n')}` : '';
+    
     // Show detailed outlet information in an alert
     Alert.alert(
       outlet.name,
@@ -166,8 +206,8 @@ function HistoryTabScreenContent() {
       `${t('village')}: ${outlet.village?.name || t('notAvailable')}\n` +
       `${t('postalCode')}: ${outlet.postalCode}\n` +
       `${t('coordinates')}: ${outlet.latitude && outlet.longitude ? `${outlet.latitude}, ${outlet.longitude}` : t('notAvailable')}\n` +
-      `${t('photos')}: ${t('ktp')} ${outlet.ktpPhoto ? '✓' : '✗'}, ${t('outside')} ${outlet.outsidePhotos.filter(p => p).length}/3, ${t('inside')} ${outlet.insidePhotos.filter(p => p).length}/3, ${t('inventory')} ${outlet.inventoryPhotos.filter(p => p).length}/3\n` +
-      `Created: ${formatDateTime(outlet.createdAt)}\n` +
+      `${t('photos')}: ${t('ktp')} ${outlet.ktpPhoto ? '✓' : '✗'}, ${t('outside')} ${outlet.outsidePhotos.filter(p => p).length}/3, ${t('inside')} ${outlet.insidePhotos.filter(p => p).length}/3, ${t('inventory')} ${outlet.inventoryPhotos.filter(p => p).length}/3` +
+      questionnaireText + `\n\nCreated: ${formatDateTime(outlet.createdAt)}\n` +
       `Last Updated: ${formatDateTime(outlet.updatedAt)}`,
       [
         { text: t('close'), style: 'cancel' }
@@ -714,12 +754,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     gap: 8,
+    minHeight: 32,
   },
   syncBadge: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: 6,
-    alignSelf: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+    minWidth: 24,
   },
   syncSynced: {
     backgroundColor: '#4CAF50',

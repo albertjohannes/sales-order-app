@@ -105,7 +105,7 @@ export default function QuestionnaireStep({ formData, updateFormData }: Question
       updateFormData('quizYearsInBusiness', null);
     } else {
       const num = parseInt(numericValue);
-      if (num >= 0 && num <= 100) {
+      if (num >= 0 && num <= 9999) {
         updateFormData('quizYearsInBusiness', num);
       }
     }
@@ -212,7 +212,7 @@ export default function QuestionnaireStep({ formData, updateFormData }: Question
           placeholder={t('enterYearsInBusiness')}
           placeholderTextColor="#999"
           keyboardType="numeric"
-          maxLength={3}
+          maxLength={4}
         />
       </View>
 

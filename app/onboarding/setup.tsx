@@ -273,34 +273,36 @@ function OnboardingScreenContent() {
     <View style={styles.stepIndicator}>
       <View style={styles.stepIndicatorBackground}>
         {Array.from({ length: totalSteps }, (_, i) => (
-          <View key={i} style={styles.stepContainer}>
-            <View style={styles.stepContentContainer}>
-              <View style={[
-                styles.stepCircle,
-                currentStep > i + 1 ? styles.stepCompleted : 
-                currentStep === i + 1 ? styles.stepActive : styles.stepInactive
-              ]}>
-                {currentStep > i + 1 ? (
-                  <Text style={styles.checkmarkText}>✓</Text>
-                ) : (
-                  <Text style={[
-                    styles.stepNumber,
-                    currentStep === i + 1 ? styles.stepNumberActive : styles.stepNumberInactive
-                  ]}>
-                    {i + 1}
-                  </Text>
-                )}
+          <React.Fragment key={i}>
+            <View style={styles.stepContainer}>
+              <View style={styles.stepContentContainer}>
+                <View style={[
+                  styles.stepCircle,
+                  currentStep > i + 1 ? styles.stepCompleted : 
+                  currentStep === i + 1 ? styles.stepActive : styles.stepInactive
+                ]}>
+                  {currentStep > i + 1 ? (
+                    <Text style={styles.checkmarkText}>✓</Text>
+                  ) : (
+                    <Text style={[
+                      styles.stepNumber,
+                      currentStep === i + 1 ? styles.stepNumberActive : styles.stepNumberInactive
+                    ]}>
+                      {i + 1}
+                    </Text>
+                  )}
+                </View>
+                <Text style={[
+                  styles.stepLabel,
+                  currentStep === i + 1 ? styles.stepLabelActive : 
+                  currentStep > i + 1 ? styles.stepLabelCompleted : styles.stepLabelInactive
+                ]}>
+                  {i === 0 ? t('basicInfoShort') : 
+                   i === 1 ? t('location') : 
+                   i === 2 ? t('photos') : 
+                   i === 3 ? t('businessInfoShort') : t('review')}
+                </Text>
               </View>
-              <Text style={[
-                styles.stepLabel,
-                currentStep === i + 1 ? styles.stepLabelActive : 
-                currentStep > i + 1 ? styles.stepLabelCompleted : styles.stepLabelInactive
-              ]}>
-                {i === 0 ? t('basicInfo') : 
-                 i === 1 ? t('location') : 
-                 i === 2 ? t('photos') : 
-                 i === 3 ? t('businessInfo') : t('review')}
-              </Text>
             </View>
             {i < totalSteps - 1 && (
               <View style={[
@@ -308,7 +310,7 @@ function OnboardingScreenContent() {
                 currentStep > i + 1 ? styles.stepLineCompleted : styles.stepLineInactive
               ]} />
             )}
-          </View>
+          </React.Fragment>
         ))}
       </View>
     </View>
@@ -471,7 +473,7 @@ const styles = StyleSheet.create({
   },
   stepIndicatorBackground: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 12,
@@ -489,8 +491,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   stepContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
+    flex: 1,
   },
   stepContentContainer: {
     alignItems: 'center',
@@ -501,6 +504,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1,
   },
   stepCompleted: {
     backgroundColor: '#667eea',
@@ -522,9 +526,9 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   stepLine: {
-    width: 30,
     height: 2,
-    marginHorizontal: 6,
+    flex: 1,
+    marginHorizontal: 2,
     borderRadius: 1,
   },
   stepLineCompleted: {
@@ -534,10 +538,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
   },
   stepLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     marginTop: 3,
     textAlign: 'center',
+    lineHeight: 12,
+    maxWidth: 60,
   },
   stepLabelActive: {
     color: '#667eea',

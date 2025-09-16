@@ -26,7 +26,7 @@ export default function SuccessScreen() {
           primaryButtonText: t('viewHistory'),
           secondaryButtonText: t('backToHome'),
           primaryAction: () => router.push('/(tabs)/history'),
-          secondaryAction: () => router.back(),
+          secondaryAction: () => router.push('/(tabs)'),
         };
       case 'payment':
         return {
@@ -35,7 +35,16 @@ export default function SuccessScreen() {
           primaryButtonText: t('viewCollections'),
           secondaryButtonText: t('backToHome'),
           primaryAction: () => router.push('/(tabs)/history?tab=collections'),
-          secondaryAction: () => router.back(),
+          secondaryAction: () => router.push('/(tabs)'),
+        };
+      case 'onboarding':
+        return {
+          title: t('onboardingComplete'),
+          message: t('onboardingCompleteMessage'),
+          primaryButtonText: t('viewHistory'),
+          secondaryButtonText: t('backToHome'),
+          primaryAction: () => router.push('/(tabs)/history'),
+          secondaryAction: () => router.push('/(tabs)'),
         };
       case 'order':
       default:
@@ -45,7 +54,7 @@ export default function SuccessScreen() {
           primaryButtonText: t('viewOrder'),
           secondaryButtonText: t('backToHome'),
           primaryAction: () => router.push('/(tabs)/history'),
-          secondaryAction: () => router.back(),
+          secondaryAction: () => router.push('/(tabs)'),
         };
     }
   };

@@ -316,12 +316,12 @@ export const translations = {
     en: 'Invalid authorization code'
   },
   submitPaymentCollection: {
-    id: 'Kirim Koleksi Pembayaran',
+    id: 'Konfirmasi Koleksi Pembayaran',
     en: 'Submit Payment Collection'
   },
   scanQRPromo: {
-    id: 'Scan kode QR dari aplikasi Warung Adil untuk otorisasi cepat. Input manual juga tersedia.',
-    en: 'Scan QR codes from Warung Adil app for quick authorization. Manual entry also available.'
+    id: 'Scan kode QR dari aplikasi Warung Adil untuk otorisasi cepat.',
+    en: 'Scan QR codes from Warung Adil app for quick authorization.'
   },
   tapToScanQR: {
     id: 'Tap untuk scan QR otorisasi',

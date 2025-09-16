@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   // Development URL
-  DEV_URL: 'http://localhost:4000/api',
+  DEV_URL: 'http://10.10.0.88:4000/api',
   
   // Production URL (replace with your actual Vercel URL)
   PROD_URL: 'https://sales-order-backend.vercel.app/api',
@@ -15,8 +15,8 @@ export const API_CONFIG = {
     
     // 2. Check if running in development mode
     if (__DEV__) {
-      // In development, try localhost first, fallback to production
-      return 'http://localhost:4000/api';
+      // In development, use local IP for simulator compatibility
+      return 'http://10.10.0.88:4000/api';
     }
     
     // 3. Default to production URL

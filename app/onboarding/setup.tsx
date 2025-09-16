@@ -102,10 +102,12 @@ const createFormData = (outletData: any): FormData => {
   
   // Add photo files
   if (outletData.ktpPhoto) {
+    // Check if it's an asset URI (starts with file://) or a real file URI
+    const isAssetUri = outletData.ktpPhoto.startsWith('file://') && !outletData.ktpPhoto.includes('test-');
     formData.append('ktpPhoto', {
       uri: outletData.ktpPhoto,
-      type: 'image/jpeg',
-      name: 'ktp.jpg',
+      type: isAssetUri ? 'image/png' : 'image/jpeg',
+      name: isAssetUri ? 'ktp_test.png' : 'ktp.jpg',
     } as any);
   } else if (__DEV__) {
     // In development, use a test image if no KTP photo provided
@@ -120,10 +122,12 @@ const createFormData = (outletData: any): FormData => {
   if (outletData.outsidePhotos && outletData.outsidePhotos.length > 0) {
     outletData.outsidePhotos.forEach((photoUri: string, index: number) => {
       if (photoUri) {
+        // Check if it's an asset URI (starts with file://) or a real file URI
+        const isAssetUri = photoUri.startsWith('file://') && !photoUri.includes('test-');
         formData.append('outsidePhotos', {
           uri: photoUri,
-          type: 'image/jpeg',
-          name: `outside_${index + 1}.jpg`,
+          type: isAssetUri ? 'image/png' : 'image/jpeg',
+          name: isAssetUri ? `outside_test_${index + 1}.png` : `outside_${index + 1}.jpg`,
         } as any);
       }
     });
@@ -145,10 +149,12 @@ const createFormData = (outletData: any): FormData => {
   if (outletData.insidePhotos && outletData.insidePhotos.length > 0) {
     outletData.insidePhotos.forEach((photoUri: string, index: number) => {
       if (photoUri) {
+        // Check if it's an asset URI (starts with file://) or a real file URI
+        const isAssetUri = photoUri.startsWith('file://') && !photoUri.includes('test-');
         formData.append('insidePhotos', {
           uri: photoUri,
-          type: 'image/jpeg',
-          name: `inside_${index + 1}.jpg`,
+          type: isAssetUri ? 'image/png' : 'image/jpeg',
+          name: isAssetUri ? `inside_test_${index + 1}.png` : `inside_${index + 1}.jpg`,
         } as any);
       }
     });
@@ -165,10 +171,12 @@ const createFormData = (outletData: any): FormData => {
   if (outletData.inventoryPhotos && outletData.inventoryPhotos.length > 0) {
     outletData.inventoryPhotos.forEach((photoUri: string, index: number) => {
       if (photoUri) {
+        // Check if it's an asset URI (starts with file://) or a real file URI
+        const isAssetUri = photoUri.startsWith('file://') && !photoUri.includes('test-');
         formData.append('inventoryPhotos', {
           uri: photoUri,
-          type: 'image/jpeg',
-          name: `inventory_${index + 1}.jpg`,
+          type: isAssetUri ? 'image/png' : 'image/jpeg',
+          name: isAssetUri ? `inventory_test_${index + 1}.png` : `inventory_${index + 1}.jpg`,
         } as any);
       }
     });
@@ -303,11 +311,8 @@ function OnboardingScreenContent() {
         syncStatus 
       });
 
-      Alert.alert(
-        t('onboardingComplete'),
-        t('onboardingCompleteMessage'),
-        [ { text: t('ok'), onPress: () => router.push('/(tabs)') } ]
-      );
+      // Navigate to shared success with actions (history/home)
+      router.push('/shared/success?type=onboarding');
     } finally {
       setIsSubmitting(false);
     }
@@ -335,11 +340,12 @@ function OnboardingScreenContent() {
       case 2: // Location
         return formData.latitude !== '' && formData.longitude !== '';
       case 3: // Photos
-        const ktpValid = formData.ktpPhoto !== '' || true; // allow empty; will be replaced with dummy
-        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 0; // will be replaced
-        const insideValid = formData.insidePhotos.filter(p => p).length >= 0; // will be replaced
-        const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 0; // will be replaced
-        
+        // Require at least 1 photo per category
+        const ktpValid = formData.ktpPhoto.trim() !== '';
+        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 1;
+        const insideValid = formData.insidePhotos.filter(p => p).length >= 1;
+        const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 1;
+
         return ktpValid && outsideValid && insideValid && inventoryValid;
       case 4: // Questionnaire
         // At least one top selling item is required

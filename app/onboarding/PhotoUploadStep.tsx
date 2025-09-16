@@ -58,10 +58,15 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
   });
 
   const handlePhotoUpload = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
+    console.log(`[PHOTO] handlePhotoUpload called for ${type}, index: ${index}`);
+    console.log(`[PHOTO] __DEV__: ${__DEV__}, Platform.OS: ${Platform.OS}`);
+    
     // For iOS simulator, use test images
     if (__DEV__ && Platform.OS === 'ios') {
+      console.log(`[PHOTO] Using test image path`);
       useTestImage(type, index);
     } else {
+      console.log(`[PHOTO] Using camera path`);
       // Use real camera capture
       openCamera(type, index);
     }
@@ -69,9 +74,54 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
   // Test image function for iOS simulator
   const useTestImage = (type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
-    // For testing, we'll use a placeholder file URI
-    // In a real app, you might want to use actual test images from assets
-    const testImageUri = `file:///test-${type}-${index || 0}.jpg`;
+    console.log(`[PHOTO] useTestImage called for ${type}, index: ${index}`);
+    
+    // For testing, use actual asset images that can be read by FormData
+    let testImageUri: string;
+    
+    try {
+      switch (type) {
+        case 'ktp':
+          testImageUri = Image.resolveAssetSource(require('../../assets/images/sales_logo.png')).uri;
+          break;
+        case 'outside':
+          const outsideImages = [
+            require('../../assets/images/banners/banner_1.png'),
+            require('../../assets/images/banners/banner_2.png'),
+            require('../../assets/images/banners/banner_3.png')
+          ];
+          testImageUri = Image.resolveAssetSource(outsideImages[index || 0]).uri;
+          break;
+        case 'inside':
+          const insideImages = [
+            require('../../assets/images/banners/banner_1.png'),
+            require('../../assets/images/banners/banner_2.png'),
+            require('../../assets/images/banners/banner_3.png')
+          ];
+          testImageUri = Image.resolveAssetSource(insideImages[index || 0]).uri;
+          break;
+        case 'inventory':
+          const inventoryImages = [
+            require('../../assets/images/icon.png'),
+            require('../../assets/images/favicon.png'),
+            require('../../assets/images/sales_logo.png')
+          ];
+          testImageUri = Image.resolveAssetSource(inventoryImages[index || 0]).uri;
+          break;
+        default:
+          testImageUri = Image.resolveAssetSource(require('../../assets/images/sales_logo.png')).uri;
+      }
+      
+      console.log(`[PHOTO] Resolved asset URI for ${type}: ${testImageUri}`);
+      console.log(`[PHOTO] URI type check - starts with file://: ${testImageUri.startsWith('file://')}`);
+      console.log(`[PHOTO] URI type check - contains test-: ${testImageUri.includes('test-')}`);
+      
+    } catch (error) {
+      console.error(`[PHOTO] Error resolving asset for ${type}:`, error);
+      // Fallback to a simple test URI
+      testImageUri = `file:///test-${type}-${index || 0}.jpg`;
+    }
+    
     console.log(`[PHOTO] Using test image URI for ${type} (iOS simulator): ${testImageUri}`);
     savePhoto(testImageUri, type, index);
   };
@@ -87,7 +137,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
+      quality: 0.4,
       allowsEditing: false,
       exif: false,
       base64: false,
@@ -179,15 +229,12 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Outside Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletOutsidePhotos')} * ({t('twoRequiredThirdOptional')})</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletOutsidePhotos')} *</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
               <TouchableOpacity 
-                style={[
-                  styles.photoGridItem,
-                  index === 2 && styles.optionalPhotoItem
-                ]}
+                style={styles.photoGridItem}
                 onPress={() => formData.outsidePhotos[index] ? handlePhotoPreview(formData.outsidePhotos[index], 'outside', index) : handlePhotoUpload('outside', index)}
               >
                 {formData.outsidePhotos[index] ? (
@@ -199,13 +246,8 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
                   </View>
                 ) : (
                   <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color={index === 2 ? "#999" : "#007AFF"} />
-                    <Text style={[
-                      styles.photoUploadText,
-                      index === 2 && styles.optionalPhotoText
-                    ]}>
-                      {index === 2 ? t('photoOptional') : `${t('photo')} ${index + 1}`}
-                    </Text>
+                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                    <Text style={styles.photoUploadText}>{`${t('photo')} ${index + 1}`}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -226,15 +268,12 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Inside Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInsidePhotos')} * ({t('twoRequiredThirdOptional')})</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletInsidePhotos')} *</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
               <TouchableOpacity 
-                style={[
-                  styles.photoGridItem,
-                  index === 2 && styles.optionalPhotoItem
-                ]}
+                style={styles.photoGridItem}
                 onPress={() => formData.insidePhotos[index] ? handlePhotoPreview(formData.insidePhotos[index], 'inside', index) : handlePhotoUpload('inside', index)}
               >
                 {formData.insidePhotos[index] ? (
@@ -246,13 +285,8 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
                   </View>
                 ) : (
                   <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color={index === 2 ? "#999" : "#007AFF"} />
-                    <Text style={[
-                      styles.photoUploadText,
-                      index === 2 && styles.optionalPhotoText
-                    ]}>
-                      {index === 2 ? t('photoOptional') : `${t('photo')} ${index + 1}`}
-                    </Text>
+                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                    <Text style={styles.photoUploadText}>{`${t('photo')} ${index + 1}`}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -273,15 +307,12 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
       {/* Inventory Photos */}
       <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInventoryPhotos')} * ({t('twoRequiredThirdOptional')})</Text>
+        <Text style={styles.photoSectionTitle}>{t('outletInventoryPhotos')} *</Text>
         <View style={styles.photoGrid}>
           {[0, 1, 2].map((index) => (
             <View key={index} style={styles.photoGridItemContainer}>
               <TouchableOpacity 
-                style={[
-                  styles.photoGridItem,
-                  index === 2 && styles.optionalPhotoItem
-                ]}
+                style={styles.photoGridItem}
                 onPress={() => formData.inventoryPhotos[index] ? handlePhotoPreview(formData.inventoryPhotos[index], 'inventory', index) : handlePhotoUpload('inventory', index)}
               >
                 {formData.inventoryPhotos[index] ? (
@@ -293,13 +324,8 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
                   </View>
                 ) : (
                   <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color={index === 2 ? "#999" : "#007AFF"} />
-                    <Text style={[
-                      styles.photoUploadText,
-                      index === 2 && styles.optionalPhotoText
-                    ]}>
-                      {index === 2 ? t('photoOptional') : `${t('photo')} ${index + 1}`}
-                    </Text>
+                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                    <Text style={styles.photoUploadText}>{`${t('photo')} ${index + 1}`}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -564,14 +590,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   optionalPhotoItem: {
-    borderWidth: 2,
-    borderColor: '#ccc',
-    backgroundColor: '#f9f9f9',
-    opacity: 0.7,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: 'white',
+    opacity: 1,
   },
   optionalPhotoText: {
-    color: '#999',
-    fontSize: 12,
-    fontStyle: 'italic',
+    color: '#007AFF',
+    fontSize: 14,
+    fontStyle: 'normal',
   },
 });

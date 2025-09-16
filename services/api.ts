@@ -39,8 +39,11 @@ class ApiService {
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error(`[API] JSON Parse Error:`, parseError);
-        console.error(`[API] Response text:`, responseText);
-        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
+        console.error(`[API] Full response text:`, responseText);
+        console.error(`[API] Response length:`, responseText.length);
+        console.error(`[API] First 200 chars:`, responseText.substring(0, 200));
+        console.error(`[API] Last 200 chars:`, responseText.substring(Math.max(0, responseText.length - 200)));
+        throw new Error(`Invalid JSON response (${responseText.length} chars): ${responseText.substring(0, 200)}...`);
       }
       
       if (!response.ok) {

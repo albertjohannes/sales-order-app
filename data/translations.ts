@@ -678,6 +678,14 @@ export const translations = {
     id: 'Nomor telepon tidak valid',
     en: 'Invalid phone number'
   },
+  phoneRequired: {
+    id: 'Nomor HP wajib diisi',
+    en: 'Phone number is required'
+  },
+  ownerNameRequired: {
+    id: 'Nama pemilik wajib diisi',
+    en: 'Owner name is required'
+  },
   passwordMismatch: {
     id: 'Kata sandi tidak cocok',
     en: 'Passwords do not match'
@@ -883,6 +891,22 @@ export const translations = {
   enterOutletName: {
     id: 'Masukkan nama outlet',
     en: 'Enter outlet name'
+  },
+  ownerName: {
+    id: 'Nama Pemilik',
+    en: 'Owner Name'
+  },
+  enterOwnerName: {
+    id: 'Masukkan nama pemilik',
+    en: 'Enter owner name'
+  },
+  ownerPhone: {
+    id: 'Nomor HP Pemilik',
+    en: 'Owner Phone Number'
+  },
+  enterOwnerPhone: {
+    id: 'Masukkan nomor HP pemilik',
+    en: 'Enter owner phone number'
   },
   outletAddress: {
     id: 'Alamat Outlet',

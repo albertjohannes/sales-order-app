@@ -26,6 +26,8 @@ import ReviewStep from './ReviewStep';
 
 interface OutletForm {
   name: string;
+  ownerName: string;
+  ownerPhone: string;
   streetAddress: string;
   province: any;
   regency: any;
@@ -55,6 +57,8 @@ const createFormData = (outletData: any): FormData => {
   
   // Add text fields
   formData.append('name', outletData.name);
+  formData.append('ownerName', outletData.ownerName);
+  formData.append('ownerPhone', outletData.ownerPhone);
   formData.append('streetAddress', outletData.streetAddress);
   
   // Add region data as JSON strings
@@ -156,6 +160,8 @@ function OnboardingScreenContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<OutletForm>({
     name: '',
+    ownerName: '',
+    ownerPhone: '',
     streetAddress: '',
     province: null,
     regency: null,
@@ -279,6 +285,8 @@ function OnboardingScreenContent() {
     switch (currentStep) {
       case 1: // Basic Info
         return formData.name.trim() !== '' && 
+               formData.ownerName.trim() !== '' && 
+               formData.ownerPhone.trim() !== '' && 
                formData.streetAddress.trim() !== '' && 
                formData.province !== null && 
                formData.regency !== null && 
@@ -318,7 +326,8 @@ function OnboardingScreenContent() {
       setCurrentStep(currentStep + 1);
     } else {
       // Validate required fields before submission
-      if (!formData.name.trim() || !formData.streetAddress.trim() || !formData.province || 
+      if (!formData.name.trim() || !formData.ownerName.trim() || !formData.ownerPhone.trim() || 
+          !formData.streetAddress.trim() || !formData.province || 
           !formData.regency || !formData.district || !formData.village || !formData.postalCode.trim()) {
         Alert.alert(
           t('error'),
@@ -334,6 +343,8 @@ function OnboardingScreenContent() {
       const outletData = {
           id: `OUTLET-${Date.now()}`,
           name: formData.name.trim(),
+          ownerName: formData.ownerName.trim(),
+          ownerPhone: formData.ownerPhone.trim(),
           streetAddress: formData.streetAddress.trim(),
           province: formData.province ? {
             id: formData.province.id || formData.province.code,

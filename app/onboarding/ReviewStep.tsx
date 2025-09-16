@@ -8,6 +8,8 @@ import {
 
 interface OutletForm {
   name: string;
+  ownerName: string;
+  ownerPhone: string;
   streetAddress: string;
   province: any;
   regency: any;
@@ -45,6 +47,14 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
         <View style={styles.reviewItem}>
           <Text style={styles.reviewLabel}>{t('outletName')}:</Text>
           <Text style={styles.reviewValue}>{formData.name || t('notProvided')}</Text>
+        </View>
+        <View style={styles.reviewItem}>
+          <Text style={styles.reviewLabel}>{t('ownerName')}:</Text>
+          <Text style={styles.reviewValue}>{formData.ownerName || t('notProvided')}</Text>
+        </View>
+        <View style={styles.reviewItem}>
+          <Text style={styles.reviewLabel}>{t('ownerPhone')}:</Text>
+          <Text style={styles.reviewValue}>{formData.ownerPhone || t('notProvided')}</Text>
         </View>
         <View style={styles.reviewItem}>
           <Text style={styles.reviewLabel}>{t('streetAddress')}:</Text>

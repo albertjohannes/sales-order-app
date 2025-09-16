@@ -14,6 +14,8 @@ import {
 
 interface OutletForm {
   name: string;
+  ownerName: string;
+  ownerPhone: string;
   streetAddress: string;
   province: Province | null;
   regency: Regency | null;
@@ -133,6 +135,33 @@ export default function BasicInfoStep({ formData, updateFormData }: BasicInfoSte
           onChangeText={(text) => updateFormData('name', text)}
           placeholder={t('enterOutletName')}
           placeholderTextColor="#999"
+        />
+      </View>
+
+      <View style={styles.formSection}>
+        <Text style={styles.fieldLabel}>{t('ownerName')} *</Text>
+        <TextInput
+          style={styles.textInput}
+          value={formData.ownerName}
+          onChangeText={(text) => updateFormData('ownerName', text)}
+          placeholder={t('enterOwnerName')}
+          placeholderTextColor="#999"
+        />
+      </View>
+
+      <View style={styles.formSection}>
+        <Text style={styles.fieldLabel}>{t('ownerPhone')} *</Text>
+        <TextInput
+          style={styles.textInput}
+          value={formData.ownerPhone}
+          onChangeText={(text) => {
+            // Only allow numbers and + for international format
+            const phoneText = text.replace(/[^0-9+]/g, '');
+            updateFormData('ownerPhone', phoneText);
+          }}
+          placeholder={t('enterOwnerPhone')}
+          placeholderTextColor="#999"
+          keyboardType="phone-pad"
         />
       </View>
 

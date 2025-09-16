@@ -31,7 +31,17 @@ class ApiService {
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     try {
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log(`[API] Raw response: ${responseText.substring(0, 200)}...`);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`[API] JSON Parse Error:`, parseError);
+        console.error(`[API] Response text:`, responseText);
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
+      }
       
       if (!response.ok) {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);

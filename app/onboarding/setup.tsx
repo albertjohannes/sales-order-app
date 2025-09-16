@@ -107,6 +107,13 @@ const createFormData = (outletData: any): FormData => {
       type: 'image/jpeg',
       name: 'ktp.jpg',
     } as any);
+  } else if (__DEV__) {
+    // In development, use a test image if no KTP photo provided
+    formData.append('ktpPhoto', {
+      uri: require('../../assets/images/sales_logo.png'),
+      type: 'image/png',
+      name: 'ktp_test.png',
+    } as any);
   }
   
   // Add outside photos
@@ -120,6 +127,18 @@ const createFormData = (outletData: any): FormData => {
         } as any);
       }
     });
+  } else if (__DEV__) {
+    // In development, use test images if no outside photos provided
+    formData.append('outsidePhotos', {
+      uri: require('../../assets/images/banners/banner_1.png'),
+      type: 'image/png',
+      name: 'outside_test_1.png',
+    } as any);
+    formData.append('outsidePhotos', {
+      uri: require('../../assets/images/banners/banner_2.png'),
+      type: 'image/png',
+      name: 'outside_test_2.png',
+    } as any);
   }
   
   // Add inside photos
@@ -133,6 +152,13 @@ const createFormData = (outletData: any): FormData => {
         } as any);
       }
     });
+  } else if (__DEV__) {
+    // In development, use test images if no inside photos provided
+    formData.append('insidePhotos', {
+      uri: require('../../assets/images/banners/banner_3.png'),
+      type: 'image/png',
+      name: 'inside_test_1.png',
+    } as any);
   }
   
   // Add inventory photos
@@ -146,6 +172,18 @@ const createFormData = (outletData: any): FormData => {
         } as any);
       }
     });
+  } else if (__DEV__) {
+    // In development, use test images if no inventory photos provided
+    formData.append('inventoryPhotos', {
+      uri: require('../../assets/images/icon.png'),
+      type: 'image/png',
+      name: 'inventory_test_1.png',
+    } as any);
+    formData.append('inventoryPhotos', {
+      uri: require('../../assets/images/favicon.png'),
+      type: 'image/png',
+      name: 'inventory_test_2.png',
+    } as any);
   }
   
   return formData;
@@ -212,15 +250,16 @@ function OnboardingScreenContent() {
       });
 
       try {
-        // Check if we have actual photo files to upload
+        // In development, always use real files for testing
+        // In production, check if we have actual photo files to upload
         const hasPhotos = outletData.ktpPhoto || 
           (outletData.outsidePhotos && outletData.outsidePhotos.some((photo: string) => photo)) ||
           (outletData.insidePhotos && outletData.insidePhotos.some((photo: string) => photo)) ||
           (outletData.inventoryPhotos && outletData.inventoryPhotos.some((photo: string) => photo));
 
         let result;
-        if (hasPhotos) {
-          // Use file upload for real photos
+        if (hasPhotos || __DEV__) {
+          // Use file upload for real photos or in development mode
           console.log('Uploading with file upload (FormData)');
           const formData = createFormData(outletData);
           result = await Promise.race([

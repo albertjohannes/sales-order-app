@@ -350,6 +350,43 @@ function HistoryTabScreenContent() {
             )}
           </View>
         </View>
+        {item.syncStatus !== 'synced' && (
+          <TouchableOpacity
+            style={styles.syncNowButton}
+            onPress={async () => {
+              try {
+                // Attempt re-sync: send minimal payload to backend
+                const payload = {
+                  name: item.name,
+                  streetAddress: item.streetAddress,
+                  province: item.province ? { code: item.province.code, name: item.province.name } : null,
+                  regency: item.regency ? { code: item.regency.code, name: item.regency.name } : null,
+                  district: item.district ? { code: item.district.code, name: item.district.name } : null,
+                  village: item.village ? { code: item.village.code, name: item.village.name } : null,
+                  postalCode: item.postalCode,
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                  ktpPhoto: item.ktpPhoto,
+                  outsidePhotos: item.outsidePhotos,
+                  insidePhotos: item.insidePhotos,
+                  inventoryPhotos: item.inventoryPhotos,
+                  quizTopSellingItems: item.quizTopSellingItems || [],
+                  quizPrimaryDistributor: item.quizPrimaryDistributor || '',
+                  quizReorderFrequency: item.quizReorderFrequency || '',
+                  quizBusinessType: item.quizBusinessType || '',
+                  quizYearsInBusiness: item.quizYearsInBusiness || null,
+                } as any;
+                await api.createOnboarding(payload);
+              } catch (e) {
+              } finally {
+                // Refresh list regardless of success/failure
+                loadData();
+              }
+            }}
+          >
+            <Text style={styles.syncNowButtonText}>{t('refresh')}</Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.photoSummary}>
           <Text style={styles.photoSummaryText}>
             📸 {item.ktpPhoto ? '✓' : '✗'} • {item.outsidePhotos.filter(p => p).length}/3 • {item.insidePhotos.filter(p => p).length}/3 • {item.inventoryPhotos.filter(p => p).length}/3
@@ -752,6 +789,19 @@ const styles = StyleSheet.create({
   },
   syncText: {
     fontSize: 10,
+    fontWeight: '600',
+  },
+  syncNowButton: {
+    marginTop: 8,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    alignSelf: 'flex-start',
+  },
+  syncNowButtonText: {
+    color: 'white',
+    fontSize: 12,
     fontWeight: '600',
   },
   collectionDetails: {

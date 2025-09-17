@@ -137,7 +137,7 @@ export default function OutletDetailModal(props: OutletDetailModalProps) {
               <View style={styles.row}><Text style={styles.label}>{t('reorderFrequency')}:</Text><Text style={styles.value}>{outlet.quizReorderFrequency || t('notAvailable')}</Text></View>
             )}
             {outlet.quizYearsInBusiness !== null && outlet.quizYearsInBusiness !== undefined && (
-              <View style={styles.row}><Text style={styles.label}>{t('yearsInBusiness')}:</Text><Text style={styles.value}>{`${outlet.quizYearsInBusiness} ${t('years')}`}</Text></View>
+              <View style={styles.row}><Text style={styles.label}>{t('yearsInBusiness')}:</Text><Text style={styles.value}>{`${outlet.quizYearsInBusiness}`}</Text></View>
             )}
           </View>
         </ScrollView>

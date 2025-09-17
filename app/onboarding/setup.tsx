@@ -318,10 +318,19 @@ function OnboardingScreenContent() {
         console.error('Error sending to backend:', error);
         syncStatus = 'failed';
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        // Persist locally as failed so it appears in History and can be retried later
+        try {
+          await saveOutlet({
+            ...outletData,
+            id: outletData.id,
+            syncStatus: 'failed',
+            updatedAt: new Date().toISOString(),
+          });
+        } catch {}
         Alert.alert(
-          'Backend Error Details',
-          `Full Error: ${errorMessage}\n\nThis will help us debug the issue. Please copy this error message.`,
-          [ { text: 'OK', style: 'default' } ]
+          t('warning'),
+          `${t('failedToSyncData')}\n\n${t('viewHistory')}: ${t('noOnboardingRecords')}\n${t('tryAgain')}.`,
+          [ { text: t('ok'), style: 'default' } ]
         );
         return;
       }

@@ -2,12 +2,12 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface TermsModalProps {
@@ -63,7 +63,7 @@ export default function TermsModal({ visible, onClose }: TermsModalProps) {
             
             <Text style={styles.termsModalSubtitle}>4. Pembayaran</Text>
             <Text style={styles.termsModalText}>
-              Pembayaran akan diproses menggunakan saldo Fairbanc yang tersedia.
+              Pembayaran akan diproses menggunakan saldo yang tersedia.
             </Text>
             
             <Text style={styles.termsModalSubtitle}>5. Kebijakan Privasi</Text>

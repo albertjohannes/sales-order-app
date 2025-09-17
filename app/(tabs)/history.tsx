@@ -1,6 +1,7 @@
 import { AuthGuard } from '@/components/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
+import OutletDetailModal from '@/components/OutletDetailModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection, Transaction } from '@/data/mockData';
@@ -11,7 +12,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -35,6 +35,8 @@ function HistoryTabScreenContent() {
   const [paymentCollections, setPaymentCollections] = useState<PaymentCollection[]>([]);
   const [onboardingRecords, setOnboardingRecords] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
 
   // Reload data when screen comes into focus (includes initial load)
   useFocusEffect(
@@ -149,6 +151,21 @@ function HistoryTabScreenContent() {
         collections: mergedCollections.length,
         outlets: mergedOutlets.length
       });
+      // Debug print collections list (Riwayat -> Koleksi)
+      try {
+        console.log('[HISTORY] Collections list (Riwayat -> Koleksi):');
+        mergedCollections.forEach((c, idx) => {
+          console.log(`#${idx + 1}`, {
+            id: c.id,
+            outletId: c.outletId,
+            invoiceId: c.invoiceId,
+            amount: c.invoiceAmount,
+            status: c.status,
+            date: c.collectionDate,
+            sync: c.syncStatus || 'n/a'
+          });
+        });
+      } catch (e) {}
       
       setPaymentCollections(mergedCollections);
       setOnboardingRecords(mergedOutlets);
@@ -162,57 +179,8 @@ function HistoryTabScreenContent() {
 
 
   const handleOnboardingRecordTap = (outlet: Outlet) => {
-    // Build questionnaire section
-    const questionnaireInfo = [];
-    
-    // Top selling items
-    if (outlet.quizTopSellingItems && outlet.quizTopSellingItems.length > 0) {
-      const validItems = outlet.quizTopSellingItems.filter(item => item.trim());
-      if (validItems.length > 0) {
-        questionnaireInfo.push(`${t('topSellingItems')}: ${validItems.join(', ')}`);
-      }
-    }
-    
-    // Primary distributor
-    if (outlet.quizPrimaryDistributor) {
-      questionnaireInfo.push(`${t('primaryDistributor')}: ${outlet.quizPrimaryDistributor}`);
-    }
-    
-    // Business type
-    if (outlet.quizBusinessType) {
-      questionnaireInfo.push(`${t('businessType')}: ${outlet.quizBusinessType}`);
-    }
-    
-    // Reorder frequency
-    if (outlet.quizReorderFrequency) {
-      questionnaireInfo.push(`${t('reorderFrequency')}: ${outlet.quizReorderFrequency}`);
-    }
-    
-    // Years in business
-    if (outlet.quizYearsInBusiness !== null && outlet.quizYearsInBusiness !== undefined) {
-      questionnaireInfo.push(`${t('yearsInBusiness')}: ${outlet.quizYearsInBusiness} ${t('years')}`);
-    }
-    
-    const questionnaireText = questionnaireInfo.length > 0 ? 
-      `\n\n${t('businessInformation')}:\n${questionnaireInfo.join('\n')}` : '';
-    
-    // Show detailed outlet information in an alert
-    Alert.alert(
-      outlet.name,
-      `${t('outletAddress')}: ${outlet.streetAddress}\n` +
-      `${t('outletProvince')}: ${outlet.province?.name || t('notAvailable')}\n` +
-      `${t('outletCity')}: ${outlet.regency?.name || t('notAvailable')}\n` +
-      `${t('district')}: ${outlet.district?.name || t('notAvailable')}\n` +
-      `${t('village')}: ${outlet.village?.name || t('notAvailable')}\n` +
-      `${t('postalCode')}: ${outlet.postalCode}\n` +
-      `${t('coordinates')}: ${outlet.latitude && outlet.longitude ? `${outlet.latitude}, ${outlet.longitude}` : t('notAvailable')}\n` +
-      `${t('photos')}: ${t('ktp')} ${outlet.ktpPhoto ? '✓' : '✗'}, ${t('outside')} ${outlet.outsidePhotos.filter(p => p).length}/3, ${t('inside')} ${outlet.insidePhotos.filter(p => p).length}/3, ${t('inventory')} ${outlet.inventoryPhotos.filter(p => p).length}/3` +
-      questionnaireText + `\n\nCreated: ${formatDateTime(outlet.createdAt)}\n` +
-      `Last Updated: ${formatDateTime(outlet.updatedAt)}`,
-      [
-        { text: t('close'), style: 'cancel' }
-      ]
-    );
+    setSelectedOutlet(outlet);
+    setDetailVisible(true);
   };
 
 
@@ -325,8 +293,8 @@ function HistoryTabScreenContent() {
       
       <View style={styles.collectionDetails}>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{t('outletId')}:</Text>
-          <Text style={styles.detailValue}>{item.outletId}</Text>
+          <Text style={styles.detailLabel}>{t('outletName')}:</Text>
+          <Text style={styles.detailValue}>{(item as any).outlet_name || item.outletName || item.outletId}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Method:</Text>
@@ -519,6 +487,14 @@ function HistoryTabScreenContent() {
           style={styles.transactionsList}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={renderEmptyState}
+        />
+      )}
+      {detailVisible && selectedOutlet && (
+        <OutletDetailModal
+          visible={detailVisible}
+          outlet={selectedOutlet}
+          onClose={() => setDetailVisible(false)}
+          t={t}
         />
       )}
     </View>

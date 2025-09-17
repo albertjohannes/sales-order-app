@@ -1,10 +1,12 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Alert,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -28,6 +30,23 @@ export default function HeaderWithSettings({
 }: HeaderWithSettingsProps) {
   const [showSettings, setShowSettings] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+
+  // Version labels (robust across dev/production)
+  const expoConfig: any = (Constants as any).expoConfig || (Constants as any).manifest?.extra?.expoClient || {};
+  const nativeAppVersion = (Constants as any).nativeAppVersion as string | undefined;
+  const nativeBuildVersion = (Constants as any).nativeBuildVersion as string | undefined;
+  const configVersion = (expoConfig?.version as string) || '';
+  const iosBuildNumber = (expoConfig?.ios?.buildNumber as string) || '';
+  const androidVersionCode = (expoConfig?.android?.versionCode as number | string) || '';
+
+  // Prefer native values when available, else fall back to config
+  const appVersion = nativeAppVersion || configVersion || '';
+  let buildLabel = nativeBuildVersion || '';
+  if (!buildLabel) {
+    buildLabel = Platform.OS === 'ios' ? iosBuildNumber : String(androidVersionCode || '');
+  }
+  const appVersionLabel = appVersion ? `v${appVersion}${buildLabel ? ` (${buildLabel})` : ''}` : '';
+
 
   const handleSignOut = () => {
     Alert.alert(
@@ -105,6 +124,12 @@ export default function HeaderWithSettings({
             >
               <Text style={styles.settingsOptionText}>{t('signOut')}</Text>
             </TouchableOpacity>
+            <View style={styles.divider} />
+            {!!appVersionLabel && (
+              <View style={styles.versionItem}>
+                <Text style={styles.versionText}>App {appVersionLabel}</Text>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -197,5 +222,13 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#e0e0e0',
     marginVertical: 4,
+  },
+  versionItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  versionText: {
+    fontSize: 13,
+    color: '#999',
   },
 }); 

@@ -87,6 +87,10 @@ export const translations = {
     id: 'Riwayat',
     en: 'History'
   },
+  outletDetails: {
+    id: 'Detail Outlet',
+    en: 'Outlet Details'
+  },
   settings: {
     id: 'Pengaturan',
     en: 'Settings'
@@ -611,6 +615,14 @@ export const translations = {
   notAvailable: {
     id: 'Tidak Tersedia',
     en: 'Not Available'
+  },
+  createdAt: {
+    id: 'Dibuat',
+    en: 'Created'
+  },
+  updatedAt: {
+    id: 'Diperbarui',
+    en: 'Updated'
   },
 
   // Settings

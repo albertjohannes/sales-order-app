@@ -137,7 +137,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      quality: 0.4,
+      quality: 0.2,
       allowsEditing: false,
       exif: false,
       base64: false,

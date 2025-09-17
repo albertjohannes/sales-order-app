@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useApi } from '@/services/api';
 import { saveOutlet } from '@/services/storage';
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -269,6 +270,26 @@ function OnboardingScreenContent() {
         if (hasPhotos || __DEV__) {
           // Use file upload for real photos or in development mode
           console.log('Uploading with file upload (FormData)');
+          // Log file sizes for verification
+          const sizeOf = async (uri?: string) => {
+            try {
+              if (!uri) return 0;
+              const info = await FileSystem.getInfoAsync(uri, { size: true as any });
+              const anyInfo: any = info;
+              return typeof anyInfo.size === 'number' ? anyInfo.size : 0;
+            } catch (e) {
+              return 0;
+            }
+          };
+          const sizes = {
+            ktp: await sizeOf(outletData.ktpPhoto),
+            outside: await Promise.all((outletData.outsidePhotos || []).map((u: string) => sizeOf(u))),
+            inside: await Promise.all((outletData.insidePhotos || []).map((u: string) => sizeOf(u))),
+            inventory: await Promise.all((outletData.inventoryPhotos || []).map((u: string) => sizeOf(u))),
+          };
+          const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+          const totalBytes = (sizes.ktp || 0) + sum(sizes.outside) + sum(sizes.inside) + sum(sizes.inventory);
+          console.log('[PHOTO] File sizes (bytes):', sizes, 'Total:', totalBytes, `(~${(totalBytes/1024/1024).toFixed(2)} MB)`);
           const formData = createFormData(outletData);
           result = await Promise.race([
             api.createOnboardingWithFiles(formData),

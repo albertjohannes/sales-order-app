@@ -273,7 +273,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
           {/* Inside Photo 1 */}
           <View style={styles.photoGridItemContainer}>
             <View style={styles.photoLabelContainer}>
-              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInsidePhoto')} 1 *</Text>
+              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInsidePhoto')}</Text>
             </View>
             <TouchableOpacity 
               style={styles.photoGridItem}
@@ -289,44 +289,16 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
               ) : (
                 <View style={styles.photoUploadPlaceholder}>
                   <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                  <Text style={styles.photoUploadText}>{t('photo')} 1</Text>
+                  <Text style={styles.photoUploadText}>{t('photo')}</Text>
                 </View>
               )}
             </TouchableOpacity>
           </View>
 
-          {/* Inside Photo 2 (optional) */}
-          <View style={styles.photoGridItemContainer}>
-            <View style={styles.photoLabelContainer}>
-              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInsidePhoto')} 2 <Text style={styles.optionalTextLabel}>(optional)</Text></Text>
-            </View>
-            <TouchableOpacity 
-              style={[styles.photoGridItem, !formData.insidePhotos[1] && styles.optionalPhotoItem]}
-              onPress={() => formData.insidePhotos[1] ? handlePhotoPreview(formData.insidePhotos[1], 'inside', 1) : handlePhotoUpload('inside', 1)}
-            >
-              {formData.insidePhotos[1] ? (
-                <View style={styles.photoPreviewContainer}>
-                  <Image source={{ uri: formData.insidePhotos[1] }} style={styles.photoGridPreviewImage} />
-                  <View style={styles.photoOverlay}>
-                    <IconSymbol name="eye.fill" size={16} color="white" />
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.photoUploadPlaceholder}>
-                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                  <Text style={[styles.photoUploadText, !formData.insidePhotos[1] && styles.optionalPhotoText]}>{t('photo')} 2</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Row 3: Inventory 1 | Inventory 2 (optional) */}
-        <View style={styles.photoRow}>
           {/* Inventory Photo 1 */}
           <View style={styles.photoGridItemContainer}>
             <View style={styles.photoLabelContainer}>
-              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInventoryPhoto')} 1 *</Text>
+              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInventoryPhoto')}</Text>
             </View>
             <TouchableOpacity 
               style={styles.photoGridItem}
@@ -342,37 +314,15 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
               ) : (
                 <View style={styles.photoUploadPlaceholder}>
                   <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                  <Text style={styles.photoUploadText}>{t('photo')} 1</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Inventory Photo 2 (optional) */}
-          <View style={styles.photoGridItemContainer}>
-            <View style={styles.photoLabelContainer}>
-              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInventoryPhoto')} 2 <Text style={styles.optionalTextLabel}>(optional)</Text></Text>
-            </View>
-            <TouchableOpacity 
-              style={[styles.photoGridItem, !formData.inventoryPhotos[1] && styles.optionalPhotoItem]}
-              onPress={() => formData.inventoryPhotos[1] ? handlePhotoPreview(formData.inventoryPhotos[1], 'inventory', 1) : handlePhotoUpload('inventory', 1)}
-            >
-              {formData.inventoryPhotos[1] ? (
-                <View style={styles.photoPreviewContainer}>
-                  <Image source={{ uri: formData.inventoryPhotos[1] }} style={styles.photoGridPreviewImage} />
-                  <View style={styles.photoOverlay}>
-                    <IconSymbol name="eye.fill" size={16} color="white" />
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.photoUploadPlaceholder}>
-                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                  <Text style={[styles.photoUploadText, !formData.inventoryPhotos[1] && styles.optionalPhotoText]}>{t('photo')} 2</Text>
+                  <Text style={styles.photoUploadText}>{t('photo')}</Text>
                 </View>
               )}
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Row 3: Inventory 1 | Inventory 2 (optional) */}
+        {/* Removed optional second uploads to keep total 4 photos */}
       </View>
 
       {/* Photo Preview Modal */}

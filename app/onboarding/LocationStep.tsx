@@ -22,7 +22,7 @@ interface OutletForm {
   latitude: string;
   longitude: string;
   ktpPhoto: string; // File URI for upload
-  outsidePhotos: string[]; // File URIs for upload
+  outsidePhoto: string; // Single outside photo
   insidePhotos: string[]; // File URIs for upload
   inventoryPhotos: string[]; // File URIs for upload
   // Questionnaire fields

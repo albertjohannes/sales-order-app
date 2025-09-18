@@ -24,9 +24,9 @@ interface OutletForm {
   latitude: string;
   longitude: string;
   ktpPhoto: string; // File URI for upload
-  outsidePhotos: string[]; // File URIs for upload
-  insidePhotos: string[]; // File URIs for upload
-  inventoryPhotos: string[]; // File URIs for upload
+  outsidePhoto: string; // Single outside photo
+  insidePhotos: string[]; // Max 2 inside photos
+  inventoryPhotos: string[]; // Max 2 inventory photos
   // Questionnaire fields
   quizTopSellingItems: string[];
   quizPrimaryDistributor: string;
@@ -48,11 +48,12 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
     type: '',
     index: undefined
   });
+  const [ktpGuideVisible, setKtpGuideVisible] = useState(false);
 
   // Debug logging
   console.log('PhotoUploadStep formData:', {
     ktpPhoto: formData.ktpPhoto,
-    outsidePhotos: formData.outsidePhotos,
+    outsidePhoto: formData.outsidePhoto,
     insidePhotos: formData.insidePhotos,
     inventoryPhotos: formData.inventoryPhotos
   });
@@ -85,16 +86,10 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
           testImageUri = Image.resolveAssetSource(require('../../assets/images/sales_logo.png')).uri;
           break;
         case 'outside':
-          const outsideImages = [
-            require('../../assets/images/banners/banner_1.png'),
-            require('../../assets/images/banners/banner_2.png'),
-            require('../../assets/images/banners/banner_3.png')
-          ];
-          testImageUri = Image.resolveAssetSource(outsideImages[index || 0]).uri;
+          testImageUri = Image.resolveAssetSource(require('../../assets/images/banners/banner_1.png')).uri;
           break;
         case 'inside':
           const insideImages = [
-            require('../../assets/images/banners/banner_1.png'),
             require('../../assets/images/banners/banner_2.png'),
             require('../../assets/images/banners/banner_3.png')
           ];
@@ -103,8 +98,7 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
         case 'inventory':
           const inventoryImages = [
             require('../../assets/images/icon.png'),
-            require('../../assets/images/favicon.png'),
-            require('../../assets/images/sales_logo.png')
+            require('../../assets/images/favicon.png')
           ];
           testImageUri = Image.resolveAssetSource(inventoryImages[index || 0]).uri;
           break;
@@ -158,12 +152,15 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
 
     // Always close any open modals after camera interaction
     setPreviewModal({ visible: false, uri: '', type: '', index: undefined });
+    setKtpGuideVisible(false);
   };
 
   const savePhoto = (uri: string, type: 'ktp' | 'outside' | 'inside' | 'inventory', index?: number) => {
     console.log('Saving photo:', { uri, type, index });
     if (type === 'ktp') {
       updateFormData('ktpPhoto', uri);
+    } else if (type === 'outside') {
+      updateFormData('outsidePhoto', uri);
     } else {
       const currentPhotos = formData[`${type}Photos` as keyof OutletForm] as string[];
       const newPhotos = [...currentPhotos];
@@ -190,7 +187,12 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
     setPreviewModal({ visible: false, uri: '', type: '', index: undefined });
     // Small delay to ensure modal is closed before opening camera
     setTimeout(() => {
-      handlePhotoUpload(type as 'ktp' | 'outside' | 'inside' | 'inventory', index);
+      // For KTP, show guidance again before opening camera
+      if (type === 'ktp') {
+        setKtpGuideVisible(true);
+      } else {
+        handlePhotoUpload(type as 'ktp' | 'outside' | 'inside' | 'inventory', index);
+      }
     }, 100);
   };
 
@@ -198,149 +200,178 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
     setPreviewModal({ visible: false, uri: '', type: '', index: undefined });
   };
 
+  const startKtpCapture = () => {
+    setKtpGuideVisible(false);
+    // Slight delay for smoother transition
+    setTimeout(() => {
+      handlePhotoUpload('ktp');
+    }, 100);
+  };
+
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>{t('outletPhotos')}</Text>
       <Text style={styles.stepDescription}>{t('outletPhotosDesc')}</Text>
       
-      {/* KTP Photo */}
-      <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('ktpPhoto')} *</Text>
-        <TouchableOpacity 
-          style={styles.photoUploadButton}
-          onPress={() => formData.ktpPhoto ? handlePhotoPreview(formData.ktpPhoto, 'ktp') : handlePhotoUpload('ktp')}
-        >
-          {formData.ktpPhoto ? (
-            <View style={styles.photoPreviewContainer}>
-              <Image source={{ uri: formData.ktpPhoto }} style={styles.photoPreviewImage} />
-              <View style={styles.photoOverlay}>
-                <IconSymbol name="eye.fill" size={20} color="white" />
-                <Text style={styles.photoOverlayText}>{t('tapToView')}</Text>
-              </View>
+      {/* Photo Grid - 2x3 layout */}
+      <View style={styles.photoGrid}>
+        {/* Row 1: KTP | Outside */}
+        <View style={styles.photoRow}>
+          {/* KTP Photo */}
+          <View style={styles.photoGridItemContainer}>
+            <View style={styles.photoLabelContainer}>
+              <Text style={styles.photoLabel}>{t('ktpPhoto')} *</Text>
             </View>
-          ) : (
-            <View style={styles.photoUploadPlaceholder}>
-              <IconSymbol name="camera.fill" size={32} color="#007AFF" />
-              <Text style={styles.photoUploadText}>{t('uploadKTPPhoto')}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Outside Photos */}
-      <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletOutsidePhotos')} *</Text>
-        <View style={styles.photoGrid}>
-          {[0, 1, 2].map((index) => (
-            <View key={index} style={styles.photoGridItemContainer}>
-              <TouchableOpacity 
-                style={styles.photoGridItem}
-                onPress={() => formData.outsidePhotos[index] ? handlePhotoPreview(formData.outsidePhotos[index], 'outside', index) : handlePhotoUpload('outside', index)}
-              >
-                {formData.outsidePhotos[index] ? (
-                  <View style={styles.photoPreviewContainer}>
-                    <Image source={{ uri: formData.outsidePhotos[index] }} style={styles.photoGridPreviewImage} />
-                    <View style={styles.photoOverlay}>
-                      <IconSymbol name="eye.fill" size={16} color="white" />
-                    </View>
+            <TouchableOpacity 
+              style={styles.photoGridItem}
+              onPress={() => formData.ktpPhoto ? handlePhotoPreview(formData.ktpPhoto, 'ktp') : setKtpGuideVisible(true)}
+            >
+              {formData.ktpPhoto ? (
+                <View style={styles.photoPreviewContainer}>
+                  <Image source={{ uri: formData.ktpPhoto }} style={styles.photoGridPreviewImage} />
+                  <View style={styles.photoOverlay}>
+                    <IconSymbol name="eye.fill" size={16} color="white" />
                   </View>
-                ) : (
-                  <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                    <Text style={styles.photoUploadText}>{`${t('photo')} ${index + 1}`}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-              
-              {/* Add camera button for each grid item */}
-              {formData.outsidePhotos[index] && (
-                <TouchableOpacity 
-                  style={styles.gridCameraButton}
-                  onPress={() => handlePhotoUpload('outside', index)}
-                >
-                  <IconSymbol name="camera.fill" size={12} color="#007AFF" />
-                </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.photoUploadPlaceholder}>
+                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                  <Text style={styles.photoUploadText}>{t('uploadKTPPhoto')}</Text>
+                </View>
               )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Outside Photo */}
+          <View style={styles.photoGridItemContainer}>
+            <View style={styles.photoLabelContainer}>
+              <Text style={styles.photoLabel}>{t('outletOutsidePhoto')} *</Text>
             </View>
-          ))}
+            <TouchableOpacity 
+              style={styles.photoGridItem}
+              onPress={() => formData.outsidePhoto ? handlePhotoPreview(formData.outsidePhoto, 'outside') : handlePhotoUpload('outside')}
+            >
+              {formData.outsidePhoto ? (
+                <View style={styles.photoPreviewContainer}>
+                  <Image source={{ uri: formData.outsidePhoto }} style={styles.photoGridPreviewImage} />
+                  <View style={styles.photoOverlay}>
+                    <IconSymbol name="eye.fill" size={16} color="white" />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.photoUploadPlaceholder}>
+                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                  <Text style={styles.photoUploadText}>{t('uploadOutsidePhoto')}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {/* Inside Photos */}
-      <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInsidePhotos')} *</Text>
-        <View style={styles.photoGrid}>
-          {[0, 1, 2].map((index) => (
-            <View key={index} style={styles.photoGridItemContainer}>
-              <TouchableOpacity 
-                style={styles.photoGridItem}
-                onPress={() => formData.insidePhotos[index] ? handlePhotoPreview(formData.insidePhotos[index], 'inside', index) : handlePhotoUpload('inside', index)}
-              >
-                {formData.insidePhotos[index] ? (
-                  <View style={styles.photoPreviewContainer}>
-                    <Image source={{ uri: formData.insidePhotos[index] }} style={styles.photoGridPreviewImage} />
-                    <View style={styles.photoOverlay}>
-                      <IconSymbol name="eye.fill" size={16} color="white" />
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                    <Text style={styles.photoUploadText}>{`${t('photo')} ${index + 1}`}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-              
-              {/* Add camera button for each grid item */}
-              {formData.insidePhotos[index] && (
-                <TouchableOpacity 
-                  style={styles.gridCameraButton}
-                  onPress={() => handlePhotoUpload('inside', index)}
-                >
-                  <IconSymbol name="camera.fill" size={12} color="#007AFF" />
-                </TouchableOpacity>
-              )}
+        {/* Row 2: Inside 1 | Inside 2 (optional) */}
+        <View style={styles.photoRow}>
+          {/* Inside Photo 1 */}
+          <View style={styles.photoGridItemContainer}>
+            <View style={styles.photoLabelContainer}>
+              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInsidePhoto')} 1 *</Text>
             </View>
-          ))}
+            <TouchableOpacity 
+              style={styles.photoGridItem}
+              onPress={() => formData.insidePhotos[0] ? handlePhotoPreview(formData.insidePhotos[0], 'inside', 0) : handlePhotoUpload('inside', 0)}
+            >
+              {formData.insidePhotos[0] ? (
+                <View style={styles.photoPreviewContainer}>
+                  <Image source={{ uri: formData.insidePhotos[0] }} style={styles.photoGridPreviewImage} />
+                  <View style={styles.photoOverlay}>
+                    <IconSymbol name="eye.fill" size={16} color="white" />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.photoUploadPlaceholder}>
+                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                  <Text style={styles.photoUploadText}>{t('photo')} 1</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Inside Photo 2 (optional) */}
+          <View style={styles.photoGridItemContainer}>
+            <View style={styles.photoLabelContainer}>
+              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInsidePhoto')} 2 <Text style={styles.optionalTextLabel}>(optional)</Text></Text>
+            </View>
+            <TouchableOpacity 
+              style={[styles.photoGridItem, !formData.insidePhotos[1] && styles.optionalPhotoItem]}
+              onPress={() => formData.insidePhotos[1] ? handlePhotoPreview(formData.insidePhotos[1], 'inside', 1) : handlePhotoUpload('inside', 1)}
+            >
+              {formData.insidePhotos[1] ? (
+                <View style={styles.photoPreviewContainer}>
+                  <Image source={{ uri: formData.insidePhotos[1] }} style={styles.photoGridPreviewImage} />
+                  <View style={styles.photoOverlay}>
+                    <IconSymbol name="eye.fill" size={16} color="white" />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.photoUploadPlaceholder}>
+                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                  <Text style={[styles.photoUploadText, !formData.insidePhotos[1] && styles.optionalPhotoText]}>{t('photo')} 2</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {/* Inventory Photos */}
-      <View style={styles.photoSection}>
-        <Text style={styles.photoSectionTitle}>{t('outletInventoryPhotos')} *</Text>
-        <View style={styles.photoGrid}>
-          {[0, 1, 2].map((index) => (
-            <View key={index} style={styles.photoGridItemContainer}>
-              <TouchableOpacity 
-                style={styles.photoGridItem}
-                onPress={() => formData.inventoryPhotos[index] ? handlePhotoPreview(formData.inventoryPhotos[index], 'inventory', index) : handlePhotoUpload('inventory', index)}
-              >
-                {formData.inventoryPhotos[index] ? (
-                  <View style={styles.photoPreviewContainer}>
-                    <Image source={{ uri: formData.inventoryPhotos[index] }} style={styles.photoGridPreviewImage} />
-                    <View style={styles.photoOverlay}>
-                      <IconSymbol name="eye.fill" size={16} color="white" />
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.photoUploadPlaceholder}>
-                    <IconSymbol name="camera.fill" size={24} color="#007AFF" />
-                    <Text style={styles.photoUploadText}>{`${t('photo')} ${index + 1}`}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-              
-              {/* Add camera button for each grid item */}
-              {formData.inventoryPhotos[index] && (
-                <TouchableOpacity 
-                  style={styles.gridCameraButton}
-                  onPress={() => handlePhotoUpload('inventory', index)}
-                >
-                  <IconSymbol name="camera.fill" size={12} color="#007AFF" />
-                </TouchableOpacity>
-              )}
+        {/* Row 3: Inventory 1 | Inventory 2 (optional) */}
+        <View style={styles.photoRow}>
+          {/* Inventory Photo 1 */}
+          <View style={styles.photoGridItemContainer}>
+            <View style={styles.photoLabelContainer}>
+              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInventoryPhoto')} 1 *</Text>
             </View>
-          ))}
+            <TouchableOpacity 
+              style={styles.photoGridItem}
+              onPress={() => formData.inventoryPhotos[0] ? handlePhotoPreview(formData.inventoryPhotos[0], 'inventory', 0) : handlePhotoUpload('inventory', 0)}
+            >
+              {formData.inventoryPhotos[0] ? (
+                <View style={styles.photoPreviewContainer}>
+                  <Image source={{ uri: formData.inventoryPhotos[0] }} style={styles.photoGridPreviewImage} />
+                  <View style={styles.photoOverlay}>
+                    <IconSymbol name="eye.fill" size={16} color="white" />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.photoUploadPlaceholder}>
+                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                  <Text style={styles.photoUploadText}>{t('photo')} 1</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Inventory Photo 2 (optional) */}
+          <View style={styles.photoGridItemContainer}>
+            <View style={styles.photoLabelContainer}>
+              <Text numberOfLines={2} style={styles.photoLabel}>{t('outletInventoryPhoto')} 2 <Text style={styles.optionalTextLabel}>(optional)</Text></Text>
+            </View>
+            <TouchableOpacity 
+              style={[styles.photoGridItem, !formData.inventoryPhotos[1] && styles.optionalPhotoItem]}
+              onPress={() => formData.inventoryPhotos[1] ? handlePhotoPreview(formData.inventoryPhotos[1], 'inventory', 1) : handlePhotoUpload('inventory', 1)}
+            >
+              {formData.inventoryPhotos[1] ? (
+                <View style={styles.photoPreviewContainer}>
+                  <Image source={{ uri: formData.inventoryPhotos[1] }} style={styles.photoGridPreviewImage} />
+                  <View style={styles.photoOverlay}>
+                    <IconSymbol name="eye.fill" size={16} color="white" />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.photoUploadPlaceholder}>
+                  <IconSymbol name="camera.fill" size={24} color="#007AFF" />
+                  <Text style={[styles.photoUploadText, !formData.inventoryPhotos[1] && styles.optionalPhotoText]}>{t('photo')} 2</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -384,6 +415,46 @@ export default function PhotoUploadStep({ formData, updateFormData }: PhotoUploa
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* KTP Guidance Modal */}
+      <Modal
+        visible={ktpGuideVisible}
+        transparent
+        animationType="fade"
+        presentationStyle="overFullScreen"
+        onRequestClose={() => setKtpGuideVisible(false)}
+      >
+        <View style={styles.ktpGuideOverlay}>
+          <View style={styles.ktpGuideCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('ktpPhoto')}</Text>
+              <TouchableOpacity onPress={() => setKtpGuideVisible(false)} style={styles.closeButton}>
+                <IconSymbol name="xmark" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.modalHint, { marginTop: 4 }]}>
+              {'Please align your KTP card within the frame before capturing.'}
+            </Text>
+            <View style={styles.ktpFrameContainer}>
+              <View style={styles.ktpFrame}>
+                <View style={styles.ktpFrameNotchTL} />
+                <View style={styles.ktpFrameNotchTR} />
+                <View style={styles.ktpFrameNotchBL} />
+                <View style={styles.ktpFrameNotchBR} />
+              </View>
+            </View>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.retakeButton} onPress={() => setKtpGuideVisible(false)}>
+                <Text style={styles.retakeButtonText}>{t('cancel') || 'Cancel'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.doneButton} onPress={startKtpCapture}>
+                <IconSymbol name="camera.fill" size={16} color="#fff" />
+                <Text style={styles.doneButtonText}>{'Start Camera'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -404,43 +475,56 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: 22,
   },
-  photoSection: {
-    marginBottom: 24,
+  photoGrid: {
+    gap: 16,
   },
-  photoSectionTitle: {
-    fontSize: 16,
+  photoRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  photoGridItemContainer: {
+    flex: 1,
+  },
+  photoLabelContainer: {
+    minHeight: 36,
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  photoLabel: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 12,
+    lineHeight: 18,
   },
-  photoUploadButton: {
+  optionalTextLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#888',
+  },
+  photoGridItem: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 20,
+    padding: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    height: 120,
+    aspectRatio: 1,
     justifyContent: 'center',
   },
   photoUploadPlaceholder: {
     alignItems: 'center',
   },
   photoUploadText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#007AFF',
     marginTop: 8,
     fontWeight: '500',
+    textAlign: 'center',
   },
   photoPreviewContainer: {
     position: 'relative',
     width: '100%',
     height: '100%',
-  },
-  photoPreviewImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
   },
   photoGridPreviewImage: {
     width: '100%',
@@ -458,46 +542,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  photoOverlayText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  photoGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  photoGridItemContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  photoGridItem: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
+  optionalPhotoItem: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    aspectRatio: 1,
-  },
-  gridCameraButton: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
     backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    opacity: 0.8,
+  },
+  optionalPhotoText: {
+    color: '#007AFF',
+    fontSize: 12,
+    fontStyle: 'normal',
   },
   modalOverlay: {
     flex: 1,
@@ -577,6 +631,7 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#28a745',
@@ -589,15 +644,82 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  optionalPhotoItem: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    backgroundColor: 'white',
-    opacity: 1,
+  // KTP guidance styles
+  ktpGuideOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
-  optionalPhotoText: {
-    color: '#007AFF',
-    fontSize: 14,
-    fontStyle: 'normal',
+  ktpGuideCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    width: '95%',
+    maxWidth: 480,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  ktpFrameContainer: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ktpFrame: {
+    width: '100%',
+    maxWidth: 360,
+    aspectRatio: 1.65, // approx ID card ratio
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#00AEEF',
+    position: 'relative',
+    backgroundColor: '#f0f8ff',
+  },
+  ktpFrameNotchTL: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    width: 24,
+    height: 24,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderColor: '#00AEEF',
+    borderTopLeftRadius: 10,
+  },
+  ktpFrameNotchTR: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+    borderColor: '#00AEEF',
+    borderTopRightRadius: 10,
+  },
+  ktpFrameNotchBL: {
+    position: 'absolute',
+    bottom: -2,
+    left: -2,
+    width: 24,
+    height: 24,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+    borderColor: '#00AEEF',
+    borderBottomLeftRadius: 10,
+  },
+  ktpFrameNotchBR: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderColor: '#00AEEF',
+    borderBottomRightRadius: 10,
   },
 });

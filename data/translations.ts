@@ -996,13 +996,29 @@ export const translations = {
     id: 'Foto Luar Outlet',
     en: 'Outlet Outside Photos'
   },
+  outletOutsidePhoto: {
+    id: 'Foto Luar Outlet',
+    en: 'Outlet Outside Photo'
+  },
+  uploadOutsidePhoto: {
+    id: 'Upload Foto Luar',
+    en: 'Upload Outside Photo'
+  },
   outletInsidePhotos: {
     id: 'Foto Dalam Outlet',
     en: 'Outlet Inside Photos'
   },
+  outletInsidePhoto: {
+    id: 'Foto Dalam Outlet',
+    en: 'Outlet Inside Photo'
+  },
   outletInventoryPhotos: {
     id: 'Foto Inventaris Outlet',
     en: 'Outlet Inventory Photos'
+  },
+  outletInventoryPhoto: {
+    id: 'Foto Inventaris Outlet',
+    en: 'Outlet Inventory Photo'
   },
   photoUpload: {
     id: 'Upload Foto',

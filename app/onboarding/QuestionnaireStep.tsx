@@ -2,13 +2,13 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import {
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 interface OutletForm {
@@ -22,7 +22,7 @@ interface OutletForm {
   latitude: string;
   longitude: string;
   ktpPhoto: string; // File URI for upload
-  outsidePhotos: string[]; // File URIs for upload
+  outsidePhoto: string; // Single outside photo
   insidePhotos: string[]; // File URIs for upload
   inventoryPhotos: string[]; // File URIs for upload
   // Questionnaire fields

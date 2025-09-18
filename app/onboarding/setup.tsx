@@ -38,7 +38,7 @@ interface OutletForm {
   latitude: string;
   longitude: string;
   ktpPhoto: string; // File URI for upload
-  outsidePhotos: string[]; // File URIs for upload
+  outsidePhoto: string; // Single outside photo
   insidePhotos: string[]; // File URIs for upload
   inventoryPhotos: string[]; // File URIs for upload
   // Questionnaire fields
@@ -119,30 +119,21 @@ const createFormData = (outletData: any): FormData => {
     } as any);
   }
   
-  // Add outside photos
-  if (outletData.outsidePhotos && outletData.outsidePhotos.length > 0) {
-    outletData.outsidePhotos.forEach((photoUri: string, index: number) => {
-      if (photoUri) {
-        // Check if it's an asset URI (starts with file://) or a real file URI
-        const isAssetUri = photoUri.startsWith('file://') && !photoUri.includes('test-');
-        formData.append('outsidePhotos', {
-          uri: photoUri,
-          type: isAssetUri ? 'image/png' : 'image/jpeg',
-          name: isAssetUri ? `outside_test_${index + 1}.png` : `outside_${index + 1}.jpg`,
-        } as any);
-      }
-    });
+  // Add outside photo
+  if (outletData.outsidePhoto && outletData.outsidePhoto.trim() !== '') {
+    // Check if it's an asset URI (starts with file://) or a real file URI
+    const isAssetUri = outletData.outsidePhoto.startsWith('file://') && !outletData.outsidePhoto.includes('test-');
+    formData.append('outsidePhoto', {
+      uri: outletData.outsidePhoto,
+      type: isAssetUri ? 'image/png' : 'image/jpeg',
+      name: isAssetUri ? 'outside_test.png' : 'outside.jpg',
+    } as any);
   } else if (__DEV__) {
-    // In development, use test images if no outside photos provided
-    formData.append('outsidePhotos', {
+    // In development, use test image if no outside photo provided
+    formData.append('outsidePhoto', {
       uri: require('../../assets/images/banners/banner_1.png'),
       type: 'image/png',
-      name: 'outside_test_1.png',
-    } as any);
-    formData.append('outsidePhotos', {
-      uri: require('../../assets/images/banners/banner_2.png'),
-      type: 'image/png',
-      name: 'outside_test_2.png',
+      name: 'outside_test.png',
     } as any);
   }
   
@@ -218,7 +209,7 @@ function OnboardingScreenContent() {
     latitude: '',
     longitude: '',
     ktpPhoto: '',
-    outsidePhotos: [],
+    outsidePhoto: '',
     insidePhotos: [],
     inventoryPhotos: [],
     // Questionnaire fields
@@ -262,7 +253,7 @@ function OnboardingScreenContent() {
         // In development, always use real files for testing
         // In production, check if we have actual photo files to upload
         const hasPhotos = outletData.ktpPhoto || 
-          (outletData.outsidePhotos && outletData.outsidePhotos.some((photo: string) => photo)) ||
+          (outletData.outsidePhoto && outletData.outsidePhoto.trim() !== '') ||
           (outletData.insidePhotos && outletData.insidePhotos.some((photo: string) => photo)) ||
           (outletData.inventoryPhotos && outletData.inventoryPhotos.some((photo: string) => photo));
 
@@ -283,7 +274,7 @@ function OnboardingScreenContent() {
           };
           const sizes = {
             ktp: await sizeOf(outletData.ktpPhoto),
-            outside: await Promise.all((outletData.outsidePhotos || []).map((u: string) => sizeOf(u))),
+            outside: outletData.outsidePhoto ? [await sizeOf(outletData.outsidePhoto)] : [],
             inside: await Promise.all((outletData.insidePhotos || []).map((u: string) => sizeOf(u))),
             inventory: await Promise.all((outletData.inventoryPhotos || []).map((u: string) => sizeOf(u))),
           };
@@ -301,7 +292,7 @@ function OnboardingScreenContent() {
           const payloadToSend = {
             ...outletData,
             ktpPhoto: DUMMY_BASE64_IMAGE,
-            outsidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
+            outsidePhoto: DUMMY_BASE64_IMAGE,
             insidePhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
             inventoryPhotos: [DUMMY_BASE64_IMAGE, DUMMY_BASE64_IMAGE],
           };
@@ -372,7 +363,7 @@ function OnboardingScreenContent() {
       case 3: // Photos
         // Require at least 1 photo per category
         const ktpValid = formData.ktpPhoto.trim() !== '';
-        const outsideValid = formData.outsidePhotos.filter(p => p).length >= 1;
+        const outsideValid = !!(formData.outsidePhoto && formData.outsidePhoto.trim() !== '');
         const insideValid = formData.insidePhotos.filter(p => p).length >= 1;
         const inventoryValid = formData.inventoryPhotos.filter(p => p).length >= 1;
 
@@ -441,7 +432,7 @@ function OnboardingScreenContent() {
           latitude: formData.latitude,
           longitude: formData.longitude,
           ktpPhoto: formData.ktpPhoto,
-          outsidePhotos: formData.outsidePhotos,
+          outsidePhoto: formData.outsidePhoto,
           insidePhotos: formData.insidePhotos,
           inventoryPhotos: formData.inventoryPhotos,
           // Questionnaire fields

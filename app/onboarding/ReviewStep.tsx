@@ -19,7 +19,7 @@ interface OutletForm {
   latitude: string;
   longitude: string;
   ktpPhoto: string; // File URI for upload
-  outsidePhotos: string[]; // File URIs for upload
+  outsidePhoto: string; // Single outside photo
   insidePhotos: string[]; // File URIs for upload
   inventoryPhotos: string[]; // File URIs for upload
   // Questionnaire fields
@@ -106,7 +106,7 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
         <View style={styles.reviewItem}>
           <Text style={styles.reviewLabel}>{t('outletOutsidePhotos')}:</Text>
           <Text style={styles.reviewValue}>
-            {formData.outsidePhotos.filter(p => p).length}/3 {t('uploaded')}
+            {formData.outsidePhoto ? '1/1' : '0/1'} {t('uploaded')}
           </Text>
         </View>
         <View style={styles.reviewItem}>

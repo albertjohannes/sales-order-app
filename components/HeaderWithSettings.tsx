@@ -2,6 +2,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import { useUpdates } from 'expo-updates';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -30,6 +31,7 @@ export default function HeaderWithSettings({
 }: HeaderWithSettingsProps) {
   const [showSettings, setShowSettings] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { currentlyRunning } = useUpdates();
 
   // Version labels (robust across dev/production)
   const expoConfig: any = (Constants as any).expoConfig || (Constants as any).manifest?.extra?.expoClient || {};
@@ -45,7 +47,45 @@ export default function HeaderWithSettings({
   if (!buildLabel) {
     buildLabel = Platform.OS === 'ios' ? iosBuildNumber : String(androidVersionCode || '');
   }
-  const appVersionLabel = appVersion ? `v${appVersion}${buildLabel ? ` (${buildLabel})` : ''}` : '';
+
+  // Try to resolve commit id from multiple sources (Expo Updates manifest / extras / env)
+  const manifest: any = (currentlyRunning as any)?.manifest || {};
+  const commitFromManifest = manifest?.metadata?.commit
+    || manifest?.metadata?.gitCommit
+    || manifest?.gitCommitHash
+    || manifest?.commit
+    || manifest?.extra?.commit
+    || manifest?.extra?.gitCommitHash
+    || manifest?.extra?.git?.commit;
+  const commitFromExtras = (expoConfig?.extra?.commit as string)
+    || ((Constants as any).manifest?.extra?.commit as string);
+  const commitFromEnv = (process as any)?.env?.EXPO_PUBLIC_GIT_SHA
+    || (process as any)?.env?.EAS_BUILD_GIT_SHA
+    || (process as any)?.env?.GIT_COMMIT
+    || (process as any)?.env?.COMMIT_SHA;
+  const commitRaw = commitFromManifest || commitFromExtras || commitFromEnv || '';
+  const commitShort = typeof commitRaw === 'string' && commitRaw.length > 0 ? commitRaw.slice(0, 7) : '';
+
+  // Try to resolve channel name
+  const channelFromManifest = (currentlyRunning as any)?.metadata?.channel
+    || manifest?.metadata?.channel
+    || manifest?.metadata?.branchName
+    || manifest?.extra?.channel
+    || manifest?.extra?.branch
+    || manifest?.extra?.eas?.channel
+    || manifest?.extra?.expoClient?.channel;
+  const channelFromExtras = expoConfig?.extra?.channel
+    || ((Constants as any).manifest?.extra?.channel);
+  const channelFromEnv = (process as any)?.env?.EXPO_PUBLIC_EAS_CHANNEL
+    || (process as any)?.env?.EAS_CHANNEL
+    || (process as any)?.env?.UPDATES_CHANNEL;
+  const channelName = (channelFromManifest || channelFromExtras || channelFromEnv || '') as string;
+
+  const appVersionLabelBase = appVersion ? `v${appVersion}` : '';
+  const buildAndCommit = [buildLabel || '', commitShort || ''].filter(Boolean).join(', ');
+  const appVersionLabel = appVersionLabelBase
+    ? (buildAndCommit ? `${appVersionLabelBase} (${buildAndCommit})` : appVersionLabelBase)
+    : '';
 
 
   const handleSignOut = () => {
@@ -128,6 +168,9 @@ export default function HeaderWithSettings({
             {!!appVersionLabel && (
               <View style={styles.versionItem}>
                 <Text style={styles.versionText}>App {appVersionLabel}</Text>
+                {!!channelName && (
+                  <Text style={styles.versionText}>Channel {channelName}</Text>
+                )}
               </View>
             )}
           </View>

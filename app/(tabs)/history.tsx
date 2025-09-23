@@ -1,4 +1,3 @@
-import { AuthGuard } from '@/components/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import OutletDetailModal from '@/components/OutletDetailModal';
@@ -6,12 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection, Transaction } from '@/data/mockData';
 import { useApi } from '@/services/api';
-import { getOutlets, getPaymentCollections, getTransactions } from '@/services/storage';
+import { getOutlets, getPaymentCollections, getTransactions, savePaymentCollection } from '@/services/storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -62,6 +62,9 @@ function HistoryTabScreenContent() {
         outlets: storedOutlets.length
       });
       
+      // Debug local collections
+      console.log('[HISTORY] Local collections:', storedCollections);
+      
       setTransactions(storedTransactions);
       
       // Merge local and API data for collections
@@ -78,6 +81,9 @@ function HistoryTabScreenContent() {
 
           // Map collections API data to PaymentCollection shape if available
           if (backendCollections?.data && Array.isArray(backendCollections.data)) {
+            console.log('[HISTORY] Raw API collections data:', backendCollections.data.length, 'items');
+            console.log('[HISTORY] Raw API collections:', backendCollections.data);
+            
             const apiCollections: PaymentCollection[] = backendCollections.data.map((r: any) => ({
               id: r.id || r.collectionId || `COL-${r.created_at || Date.now()}`,
               outletId: r.outletId || r.outlet_id || '',
@@ -93,15 +99,54 @@ function HistoryTabScreenContent() {
               ...(r.note || r.notes ? { notes: r.note || r.notes } : {}),
             }));
             
+            console.log('[HISTORY] Mapped API collections:', apiCollections);
+            
             // Merge API and local collections, prioritizing API data
-            const localCollectionIds = new Set(storedCollections.map(c => c.id));
-            const apiCollectionIds = new Set(apiCollections.map(c => c.id));
+            // Create a map to track collections by backend ID to prevent duplicates
+            const collectionMap = new Map();
             
-            // Add local collections that aren't in API (unsynced)
-            const unsyncedLocal = storedCollections.filter(c => !apiCollectionIds.has(c.id));
+            // First, add all API collections (these take priority)
+            apiCollections.forEach(collection => {
+              collectionMap.set(collection.id, collection);
+            });
             
-            // Combine: API collections + unsynced local collections
-            mergedCollections = [...apiCollections, ...unsyncedLocal];
+            // Then, add local collections only if they don't already exist
+            // Check by both ID and other identifying fields to prevent duplicates
+            storedCollections.forEach(localCollection => {
+              const exists = Array.from(collectionMap.values()).some(apiCollection => {
+                // Exact ID match
+                if (apiCollection.id === localCollection.id) {
+                  return true;
+                }
+                
+                // Check if this is the same transaction with different IDs
+                // This happens when a local collection gets synced and gets a new database ID
+                const sameAmount = Math.abs((apiCollection.invoiceAmount || 0) - (localCollection.invoiceAmount || 0)) < 0.01;
+                const sameTime = Math.abs(new Date(apiCollection.collectionDate).getTime() - new Date(localCollection.collectionDate).getTime()) < 300000; // Within 5 minutes
+                const sameOutlet = (apiCollection.outletId || apiCollection.outletName || '') === (localCollection.outletId || localCollection.outletName || '');
+                
+                // If all three match, it's likely the same transaction
+                if (sameAmount && sameTime && sameOutlet) {
+                  console.log(`[HISTORY] Detected duplicate collection:`, {
+                    apiId: apiCollection.id,
+                    localId: localCollection.id,
+                    amount: apiCollection.invoiceAmount,
+                    date: apiCollection.collectionDate,
+                    outlet: apiCollection.outletId || apiCollection.outletName
+                  });
+                  return true;
+                }
+                
+                return false;
+              });
+              
+              if (!exists) {
+                collectionMap.set(localCollection.id, localCollection);
+              }
+            });
+            
+            // Convert map back to array
+            mergedCollections = Array.from(collectionMap.values());
           }
 
           // Map onboarding API data to Outlet shape if available
@@ -133,14 +178,31 @@ function HistoryTabScreenContent() {
             }));
             
             // Merge API and local outlets, prioritizing API data
-            const localOutletIds = new Set(storedOutlets.map(o => o.id));
-            const apiOutletIds = new Set(apiOutlets.map(o => o.id));
+            // Create a map to track outlets by backend ID to prevent duplicates
+            const outletMap = new Map();
             
-            // Add local outlets that aren't in API (unsynced)
-            const unsyncedLocal = storedOutlets.filter(o => !apiOutletIds.has(o.id));
+            // First, add all API outlets (these take priority)
+            apiOutlets.forEach(outlet => {
+              outletMap.set(outlet.id, outlet);
+            });
             
-            // Combine: API outlets + unsynced local outlets
-            mergedOutlets = [...apiOutlets, ...unsyncedLocal];
+            // Then, add local outlets only if they don't already exist
+            // Check by both ID and other identifying fields to prevent duplicates
+            storedOutlets.forEach(localOutlet => {
+              const exists = Array.from(outletMap.values()).some(apiOutlet => 
+                apiOutlet.id === localOutlet.id ||
+                (apiOutlet.name === localOutlet.name && 
+                 apiOutlet.streetAddress === localOutlet.streetAddress &&
+                 Math.abs(new Date(apiOutlet.createdAt).getTime() - new Date(localOutlet.createdAt).getTime()) < 60000) // Within 1 minute
+              );
+              
+              if (!exists) {
+                outletMap.set(localOutlet.id, localOutlet);
+              }
+            });
+            
+            // Convert map back to array
+            mergedOutlets = Array.from(outletMap.values());
           }
         } catch (apiError) {
           // Don't show error to user, just log it
@@ -153,11 +215,13 @@ function HistoryTabScreenContent() {
       });
       // Debug print collections list (Riwayat -> Koleksi)
       try {
-        console.log('[HISTORY] Collections list (Riwayat -> Koleksi):');
+        console.log('[HISTORY] Final merged collections list:');
+        console.log('[HISTORY] Total collections:', mergedCollections.length);
         mergedCollections.forEach((c, idx) => {
-          console.log(`#${idx + 1}`, {
+          console.log(`[HISTORY] #${idx + 1}`, {
             id: c.id,
             outletId: c.outletId,
+            outletName: (c as any).outletName,
             invoiceId: c.invoiceId,
             amount: c.invoiceAmount,
             status: c.status,
@@ -165,7 +229,9 @@ function HistoryTabScreenContent() {
             sync: c.syncStatus || 'n/a'
           });
         });
-      } catch (e) {}
+      } catch (e) {
+        console.error('[HISTORY] Error logging collections:', e);
+      }
       
       setPaymentCollections(mergedCollections);
       setOnboardingRecords(mergedOutlets);
@@ -218,6 +284,53 @@ function HistoryTabScreenContent() {
 
   const formatPrice = (price: number) => {
     return `Rp ${price.toLocaleString('id-ID')}`;
+  };
+
+  // Retry sync for a failed collection
+  const handleRetrySync = async (collection: PaymentCollection) => {
+    try {
+      // Update sync status to pending
+      const pendingCollection = { ...collection, syncStatus: 'pending' as const };
+      await savePaymentCollection(pendingCollection);
+      
+      // Reload data to show updated status
+      loadData();
+      
+      // Try to sync with backend
+      try {
+        await api.createCollection({
+          outletId: collection.outletId,
+          amount: collection.invoiceAmount,
+          method: 'cash',
+          note: collection.notes,
+          attachments: []
+        });
+        
+        // Update to synced
+        const syncedCollection = { ...collection, syncStatus: 'synced' as const };
+        await savePaymentCollection(syncedCollection);
+        
+        Alert.alert(
+          'Success',
+          'Sync successful'
+        );
+      } catch (error) {
+        // Update to failed
+        const failedCollection = { ...collection, syncStatus: 'failed' as const };
+        await savePaymentCollection(failedCollection);
+        
+        Alert.alert(
+          'Error',
+          'Sync failed'
+        );
+      }
+      
+      // Reload data to show final status
+      loadData();
+    } catch (error) {
+      console.error('Error during retry sync:', error);
+      Alert.alert('Error', 'An unexpected error occurred');
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -282,6 +395,16 @@ function HistoryTabScreenContent() {
                    item.syncStatus === 'pending' ? '📱' : '❌'}
                 </Text>
               </View>
+            )}
+            {/* Retry Button for Failed Syncs */}
+            {item.syncStatus === 'failed' && (
+              <TouchableOpacity 
+                style={styles.retryButton}
+                onPress={() => handleRetrySync(item)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.retryButtonText}>🔄</Text>
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -389,7 +512,7 @@ function HistoryTabScreenContent() {
         )}
         <View style={styles.photoSummary}>
           <Text style={styles.photoSummaryText}>
-            📸 {item.ktpPhoto ? '✓' : '✗'} • {item.outsidePhotos.filter(p => p).length}/3 • {item.insidePhotos.filter(p => p).length}/3 • {item.inventoryPhotos.filter(p => p).length}/3
+            📸 {item.ktpPhoto ? '✓' : '✗'} • {(item.outsidePhotos || []).filter(p => p).length}/3 • {(item.insidePhotos || []).filter(p => p).length}/3 • {(item.inventoryPhotos || []).filter(p => p).length}/3
           </Text>
         </View>
       </View>
@@ -435,9 +558,9 @@ function HistoryTabScreenContent() {
                 <Text style={styles.detailLabel}>{t('photos')}:</Text>
                 <Text style={styles.detailValue}>
                   {item.ktpPhoto ? '✓' : '✗'} • 
-                  {item.outsidePhotos.filter(p => p).length}/3 • 
-                  {item.insidePhotos.filter(p => p).length}/3 • 
-                  {item.inventoryPhotos.filter(p => p).length}/3
+                  {(item.outsidePhotos || []).filter(p => p).length}/3 • 
+                  {(item.insidePhotos || []).filter(p => p).length}/3 • 
+                  {(item.inventoryPhotos || []).filter(p => p).length}/3
                 </Text>
               </View>
               <View style={styles.photoLegend}>
@@ -867,15 +990,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
   },
+  retryButton: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 152, 0, 0.3)',
+  },
+  retryButtonText: {
+    fontSize: 12,
+  },
 });
 
-// Main component with error boundary and auth guard
+// Main component with error boundary
 export default function HistoryTabScreen() {
   return (
     <ErrorBoundary>
-      <AuthGuard>
-        <HistoryTabScreenContent />
-      </AuthGuard>
+      <HistoryTabScreenContent />
     </ErrorBoundary>
   );
 } 

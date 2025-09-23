@@ -3,14 +3,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  ActivityIndicator
+  View
 } from 'react-native';
 
 export default function LoginScreen() {
@@ -27,8 +27,8 @@ export default function LoginScreen() {
     setEmailError('');
     
     // Real-time validation
-    if (text && !text.endsWith('@fairbanc.app')) {
-      setEmailError('Email must be from @fairbanc.app domain');
+    if (text && !text.endsWith('@gmail.com')) {
+      setEmailError('Email must be from @gmail.com domain');
     } else if (text && !validateEmail(text).isValid) {
       setEmailError(validateEmail(text).error || 'Invalid email format');
     }
@@ -73,7 +73,7 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={[styles.input, emailError && styles.inputError]}
-              placeholder="Email (@fairbanc.app)"
+              placeholder="Email (@gmail.com)"
               value={email}
               onChangeText={handleEmailChange}
               autoCapitalize="none"

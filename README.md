@@ -440,7 +440,7 @@ curl -H "X-Agent-Email: test@example.com" \
 3. **Authentication errors**
    - Ensure `X-Agent-Email` header is being sent
    - Check if user is logged in with valid email
-   - Verify email ends with `@fairbanc.app`
+   - Verify email ends with `@gmail.com`
 
 4. **Data not syncing**
    - Check network connectivity

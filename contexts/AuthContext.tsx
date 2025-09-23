@@ -38,10 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { isValid: false, error: 'Email is required' };
     }
     
-    if (!email.endsWith('@fairbanc.app')) {
+    if (!email.endsWith('@gmail.com')) {
       return { 
         isValid: false, 
-        error: 'Email must be from @fairbanc.app domain' 
+        error: 'Email must be from @gmail.com domain' 
       };
     }
     

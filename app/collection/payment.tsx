@@ -1,4 +1,3 @@
-import { AuthGuard } from '@/components/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import TermsModal from '@/components/TermsModal';
@@ -7,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Outlet, PaymentCollection } from '@/data/mockData';
 import { useApi } from '@/services/api';
-import { getOutlets, savePaymentCollection } from '@/services/storage';
+import { getOutlets, getPaymentCollections, savePaymentCollection } from '@/services/storage';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
@@ -53,21 +52,30 @@ function CollectionScreenContent() {
   const [lockedOutlet, setLockedOutlet] = useState<Outlet | null>(null);
   const [lockedAmount, setLockedAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
 
-  // Load stored outlets on component mount
+  // Load stored outlets and check sync status on component mount
   useEffect(() => {
-    const loadOutlets = async () => {
+    const loadData = async () => {
       try {
-        const outlets = await getOutlets();
+        const [outlets, collections] = await Promise.all([
+          getOutlets(),
+          getPaymentCollections()
+        ]);
         setStoredOutlets(outlets);
+        
+        // Count pending sync items
+        const pendingCount = collections.filter(c => c.syncStatus === 'pending' || c.syncStatus === 'failed').length;
+        setPendingSyncCount(pendingCount);
       } catch (error) {
-        console.error('Error loading outlets:', error);
-        // Fallback to empty array if loading fails
+        console.error('Error loading data:', error);
+        // Fallback to empty arrays if loading fails
         setStoredOutlets([]);
+        setPendingSyncCount(0);
       }
     };
 
-    loadOutlets();
+    loadData();
   }, []);
 
   // Handle QR scan
@@ -163,6 +171,53 @@ function CollectionScreenContent() {
     return `Rp ${amount.toLocaleString('id-ID')}`;
   };
 
+  // Handle retry sync for pending items
+  const handleRetrySync = async () => {
+    try {
+      const collections = await getPaymentCollections();
+      const pendingCollections = collections.filter(c => c.syncStatus === 'pending' || c.syncStatus === 'failed');
+      
+      let successCount = 0;
+      for (const collection of pendingCollections) {
+        try {
+          await api.createCollection({
+            outletId: collection.outletId,
+            amount: collection.invoiceAmount,
+            method: 'cash',
+            note: collection.notes,
+            attachments: []
+          });
+          
+          // Update sync status to synced
+          collection.syncStatus = 'synced';
+          await savePaymentCollection(collection);
+          successCount++;
+        } catch (error) {
+          console.error('Failed to sync collection:', collection.id, error);
+        }
+      }
+      
+      // Update pending count
+      const newPendingCount = pendingCollections.length - successCount;
+      setPendingSyncCount(newPendingCount);
+      
+      if (successCount > 0) {
+        Alert.alert(
+          tText({ id: 'Sync Berhasil', en: 'Sync Successful' }),
+          tText({ id: '{count} items berhasil disinkronkan', en: '{count} items synced successfully' }).replace('{count}', successCount.toString())
+        );
+      } else if (pendingCollections.length > 0) {
+        Alert.alert(
+          tText({ id: 'Sync Gagal', en: 'Sync Failed' }),
+          tText({ id: 'Gagal menyinkronkan data. Periksa koneksi internet Anda.', en: 'Failed to sync data. Please check your internet connection.' })
+        );
+      }
+    } catch (error) {
+      console.error('Error during retry sync:', error);
+      Alert.alert(t('error'), tText({ id: 'Terjadi kesalahan saat mencoba sinkronisasi', en: 'An error occurred while trying to sync' }));
+    }
+  };
+
   const handleConfirmTransaction = async () => {
     if (!selectedOutlet) {
       Alert.alert(t('error'), t('selectOutletFirst'));
@@ -235,6 +290,11 @@ function CollectionScreenContent() {
               // Save to local storage with sync status
               await savePaymentCollection({ ...paymentCollection, syncStatus });
               
+              // Update pending sync count
+              if (syncStatus !== 'synced') {
+                setPendingSyncCount(prev => prev + 1);
+              }
+              
               // Navigate to success page with redirect to collections tab
               router.push('/shared/success?type=payment&redirect=collections');
             } catch (error) {
@@ -255,6 +315,30 @@ function CollectionScreenContent() {
       
       {/* Header with Settings */}
       <HeaderWithSettings title={t('paymentCollection')} />
+
+      {/* Sync Status Indicator */}
+      {pendingSyncCount > 0 && (
+        <View style={styles.syncStatusContainer}>
+          <View style={styles.syncStatusContent}>
+            <IconSymbol name="exclamationmark.triangle.fill" size={16} color="#FF9500" />
+            <Text style={styles.syncStatusText}>
+              {pendingSyncCount === 1 
+                ? tText({ id: '1 item pending sync', en: '1 item pending sync' })
+                : tText({ id: '{count} items pending sync', en: '{count} items pending sync' }).replace('{count}', pendingSyncCount.toString())
+              }
+            </Text>
+            <TouchableOpacity 
+              style={styles.syncRetryButton}
+              onPress={handleRetrySync}
+            >
+              <IconSymbol name="arrow.clockwise" size={14} color="#007AFF" />
+              <Text style={styles.syncRetryText}>
+                {tText({ id: 'Retry', en: 'Retry' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <ScrollView 
         style={styles.content}
@@ -888,15 +972,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  syncStatusContainer: {
+    backgroundColor: '#FFF3CD',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFEAA7',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  syncStatusContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  syncStatusText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#856404',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  syncRetryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 122, 255, 0.3)',
+  },
+  syncRetryText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
 });
 
-// Main component with error boundary and auth guard
+// Main component with error boundary
 export default function CollectionScreen() {
   return (
     <ErrorBoundary>
-      <AuthGuard>
-        <CollectionScreenContent />
-      </AuthGuard>
+      <CollectionScreenContent />
     </ErrorBoundary>
   );
 } 

@@ -1,4 +1,3 @@
-import { AuthGuard } from '@/components/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HeaderWithSettings from '@/components/HeaderWithSettings';
 import { API_CONFIG } from '@/config/api';
@@ -119,18 +118,18 @@ const createFormData = (outletData: any): FormData => {
     } as any);
   }
   
-  // Add outside photo
+  // Add outside photo (send as array to match backend expectations)
   if (outletData.outsidePhoto && outletData.outsidePhoto.trim() !== '') {
     // Check if it's an asset URI (starts with file://) or a real file URI
     const isAssetUri = outletData.outsidePhoto.startsWith('file://') && !outletData.outsidePhoto.includes('test-');
-    formData.append('outsidePhoto', {
+    formData.append('outsidePhotos', {
       uri: outletData.outsidePhoto,
       type: isAssetUri ? 'image/png' : 'image/jpeg',
       name: isAssetUri ? 'outside_test.png' : 'outside.jpg',
     } as any);
   } else if (__DEV__) {
     // In development, use test image if no outside photo provided
-    formData.append('outsidePhoto', {
+    formData.append('outsidePhotos', {
       uri: require('../../assets/images/banners/banner_1.png'),
       type: 'image/png',
       name: 'outside_test.png',
@@ -807,13 +806,11 @@ const styles = StyleSheet.create({
   },
 });
 
-// Main component with error boundary and auth guard
+// Main component with error boundary
 export default function OnboardingScreen() {
   return (
     <ErrorBoundary>
-      <AuthGuard>
-        <OnboardingScreenContent />
-      </AuthGuard>
+      <OnboardingScreenContent />
     </ErrorBoundary>
   );
 } 

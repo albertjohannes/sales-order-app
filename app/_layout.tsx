@@ -6,10 +6,32 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { UpdateChecker } from '@/components/UpdateChecker';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+
+// Inner component that has access to auth context
+function AppContent() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    // Return null while loading - the AuthProvider will handle loading state
+    return null;
+  }
+
+  return (
+    <Stack initialRouteName={isAuthenticated ? "(tabs)" : "login"}>
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="order" options={{ headerShown: false }} />
+      <Stack.Screen name="collection" options={{ headerShown: false }} />
+      <Stack.Screen name="shared" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -29,18 +51,10 @@ export default function RootLayout() {
           <UpdateChecker>
             <CartProvider>
               <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <Stack initialRouteName="login">
-                <Stack.Screen name="login" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                <Stack.Screen name="order" options={{ headerShown: false }} />
-                <Stack.Screen name="collection" options={{ headerShown: false }} />
-                <Stack.Screen name="shared" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar style="auto" />
-            </ThemeProvider>
-          </CartProvider>
+                <AppContent />
+                <StatusBar style="auto" />
+              </ThemeProvider>
+            </CartProvider>
           </UpdateChecker>
         </LanguageProvider>
       </AuthProvider>
